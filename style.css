@@ -1,0 +1,259 @@
+/* Estilo geral */
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    text-align: center;
+    margin: 20px 0;
+}
+
+header img {
+    width: 150px;
+}
+
+h2 {
+    text-align: center;
+    color: #B22222; /* Cor do botão (vermelho escuro) */
+    font-size: 2em;  /* Tamanho ajustado para a versão desktop */
+}
+
+/* Responsividade - Ajustes para telas menores */
+@media (max-width: 768px) {
+    h2 {
+        font-size: 6vw; /* Fontes ajustadas para telas menores */
+    }
+
+    form {
+        width: 90%;
+        padding: 15px;
+    }
+
+    header img {
+        width: 120px; /* Reduzindo o tamanho da imagem */
+    }
+
+    .token-inputs {
+        flex-direction: column; /* Alinha os campos de token verticalmente */
+        gap: 15px; /* Maior espaçamento entre os campos */
+    }
+
+    .token-inputs input {
+        width: 50px; /* Ajusta o tamanho dos inputs do token */
+        font-size: 1.5em; /* Ajusta o tamanho da fonte nos inputs */
+    }
+
+    .popup {
+        width: 95%; /* O popup ocupa um pouco mais da tela em dispositivos móveis */
+        padding: 15px;
+    }
+
+    input[type="submit"], .btn-avancar {
+        width: 100%; /* Faz o botão ocupar toda a largura disponível */
+    }
+}
+
+/* Responsividade - Ajustes para telas pequenas (menor que 480px) */
+@media (max-width: 480px) {
+    header img {
+        width: 100px; /* Reduz o tamanho da imagem ainda mais */
+    }
+
+    .token-inputs input {
+        width: 45px; /* Diminui ainda mais os inputs do token */
+        font-size: 1.3em; /* Ajuste para caber melhor nas telas pequenas */
+    }
+
+    .popup {
+        width: 100%; /* Faz o popup ocupar toda a largura da tela */
+        padding: 10px;
+    }
+}
+
+/* Barra de progresso no topo do formulário */
+#progresso {
+    width: 100%;
+    height: 20px;
+    background: #f3f3f3;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+#barra {
+    height: 100%;
+    width: 0%; /* Começa com 0% */
+    background: #4caf50;
+    border-radius: 5px;
+}
+
+/* Formulário */
+form {
+    width: 80%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Sombra aprimorada */
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+form:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="submit"], input[type="number"] {
+    width: calc(100% - 20px);  /* Espaço para evitar que encoste nas bordas */
+    padding: 10px;
+    margin: 5px 0 20px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease-in-out;
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+    border-color: #B22222;
+    box-shadow: 0 0 5px rgba(178, 34, 34, 0.5);
+}
+
+input[type="submit"] {
+    background-color: #B22222;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 12px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+}
+
+input[type="submit"]:hover {
+    background-color: #8B1A1A;
+}
+
+/* Contêiner dos campos de token */
+.token-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Estilo para os campos de input do token */
+.token-inputs input {
+    width: 60px;
+    text-align: center;
+    margin-right: 10px;
+    font-size: 2em;
+    padding: 10px;
+}
+
+/* Estilo de mensagem de alerta (popup) */
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    color: #333;
+    padding: 20px 40px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.5s ease-out;
+    z-index: 1000;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* Estilo do botão de fechar dentro do popup */
+.popup button {
+    background-color: #B22222;
+    border: none;
+    color: white;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 10px;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.popup button:hover {
+    background-color: #8B1A1A;
+}
+
+/* Estilo de fundo semitransparente que cobre a tela */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* Estilo para o botão de avançar */
+.btn-avancar {
+    background-color: #B22222;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 12px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-avancar:hover {
+    background-color: #8B1A1A;
+}
+
+/* Estilo para os campos de upload de fotos */
+.upload-foto {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #ccc;
+    display: inline-block;
+    margin: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-foto input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+}

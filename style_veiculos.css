@@ -1,0 +1,940 @@
+
+
+
+/* ======= ESTILO GERAL ======= */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+/* ======= CABEÇALHO ======= */
+header {
+    background-color: #1a1a1a;
+    padding: 10px 20px;
+    text-align: center;
+}
+
+header #logo {
+    max-width: 100%;
+    height: auto;
+    max-height: 50px;
+}
+
+/* ======= BARRA DE PROGRESSO ======= */
+
+
+
+#progresso {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+#barra {
+  height: 100%;
+  background: linear-gradient(90deg, #B22222, #FF6B6B);
+  width: 33%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+}
+
+
+/* ======= FORMULÁRIO ======= */
+.formulario {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Campos de entrada */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+/* Foco nos inputs */
+input:focus,
+select:focus {
+    border-color: #B22222;
+    box-shadow: 0 0 5px rgba(178, 34, 34, 0.5);
+}
+
+/* ======= BOTÕES ======= */
+input[type="button"],
+button {
+    background-color: #B22222;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+input[type="button"]:hover,
+button:hover {
+    background-color: #8B0000;
+}
+
+/* ======= CHECKBOXES ======= */
+label {
+    display: inline-block;
+    position: relative;
+    padding-left: 30px;
+    cursor: pointer;
+    font-size: 1em;
+    color: #333;
+    margin: 10px 20px;
+    line-height: 1.4;
+}
+
+/* Checkbox oculta */
+label input[type="checkbox"] {
+    display: none;
+}
+
+/* Caixa do checkbox */
+label input[type="checkbox"] + span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+/* Checkbox marcado */
+label input[type="checkbox"]:checked + span {
+    background-color: #B22222;
+    border-color: #B22222;
+}
+
+/* Ícone dentro da checkbox */
+label input[type="checkbox"]:checked + span::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+/* ======= ETAPAS ======= */
+
+
+
+#etapas {
+    display: flex;
+    justify-content: space-around; /* Melhor distribuição */
+    align-items: center;
+    width: 90%; /* Melhor aproveitamento do espaço */
+    max-width: 700px;
+    margin: 30px auto; /* Mais espaço acima e abaixo */
+    font-family: Arial, sans-serif;
+}
+
+/* Estilo dos títulos das etapas */
+#etapas span {
+    flex: 1;
+    text-align: center;
+    font-size: 16px; /* Aumenta um pouco o tamanho */
+    font-weight: 500;
+    color: #888;
+    position: relative;
+    padding: 10px 15px; /* Mais espaço ao redor */
+    transition: color 0.3s ease-in-out;
+}
+
+
+
+/* Estilização da etapa ativa */
+#etapas span.ativo {
+    color: #991212;
+    font-weight: bold;
+}
+
+/* Círculos indicativos das etapas */
+#etapas span::before {
+    content: "";
+    display: block;
+    width: 15px;
+    height: 15px;
+    background-color: #ccc;
+    border-radius: 50%;
+    margin: 0 auto 5px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Círculo ativo */
+#etapas span.ativo::before {
+    background-color: #b31515;
+    box-shadow: 0px 0px 8px rgba(221, 81, 88, 0.5);
+}
+
+/* Círculo preenchido para etapas concluídas */
+#etapas span.concluido::before {
+    background-color: #28a745;
+    box-shadow: 0px 0px 8px rgba(40, 167, 69, 0.5);
+}
+
+
+/* 🔹 ======= UPLOAD FOTOS ======== */
+
+.upload-foto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  /* 🔹 Área de upload individual */
+  .camera-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    width: 120px;
+    height: 120px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+  }
+  
+  .camera-upload:hover {
+    border-color: #B22222;
+  }
+  
+  /* 🔹 Ícone da câmera */
+  .camera-upload .camera-icon {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  
+  /* 🔹 Input de imagem invisível que ocupa toda a área */
+  .camera-upload input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+  }
+  
+  /* 🔹 Miniatura da imagem */
+  .camera-upload .miniatura {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .camera-upload .miniatura img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 5px;
+  }
+  
+  /* 🔹 Esconde o ícone da câmera se houver imagem */
+  .camera-upload.has-image .camera-icon {
+    display: none;
+  }
+  
+  /* 🔹 Responsividade */
+  @media (max-width: 768px) {
+    .upload-foto {
+      justify-content: center;
+      gap: 10px;
+    }
+  
+    .camera-upload {
+      width: 90px;
+      height: 90px;
+    }
+  
+    .camera-upload .camera-icon {
+      width: 45px;
+      height: 45px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .upload-foto {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .camera-upload {
+      width: 80px;
+      height: 80px;
+    }
+  
+    .camera-upload .camera-icon {
+      width: 40px;
+      height: 40px;
+    }
+  }
+  
+  
+  /* 🔹 Miniaturas ajustadas para preencher a área corretamente */
+  .miniatura {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .miniatura img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 5px;
+  }
+  
+  /* 🔹 Ocultar ícone da câmera quando uma imagem for carregada */
+  .camera-upload.has-image img.camera-icon {
+    display: none;
+  }
+  
+  
+
+
+
+
+/* ======= RESPONSIVIDADE ======= */
+
+
+
+/* 🔹 Melhor responsividade da área de upload */
+@media (max-width: 768px) {
+    .upload-foto {
+        grid-template-columns: repeat(2, 1fr); /* 🔹 2 colunas por linha para melhor ajuste */
+        gap: 8px; /* 🔹 Reduz espaço entre elementos */
+        justify-items: center;
+    }
+
+    .camera-upload {
+        width: 90px;
+        height: 90px;
+    }
+
+    .camera-icon {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+@media (max-width: 480px) {
+    .upload-foto {
+        grid-template-columns: repeat(1, 1fr); /* 🔹 1 coluna por linha para melhor ajuste */
+    }
+
+    .camera-upload {
+        width: 80px;
+        height: 80px;
+    }
+
+    .camera-icon {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* 🔹 Melhor disposição do formulário */
+@media (max-width: 600px) {
+    .formulario {
+        padding: 15px;
+        width: 90%;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select {
+        font-size: 0.9em;
+        padding: 10px;
+    }
+
+    input[type="button"],
+    button {
+        font-size: 1em;
+        padding: 10px;
+    }
+}
+
+/* 🔹 Melhor espaçamento para a seção de etapas em telas menores */
+@media (max-width: 768px) {
+    #etapas {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    #etapas span {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+/* 🔹 Ajuste fino para telas grandes */
+@media (min-width: 1024px) {
+    #etapas {
+        max-width: 800px;
+    }
+
+    #etapas span {
+        font-size: 18px;
+        padding: 15px 20px;
+    }
+}
+
+
+.filtro-propostas {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin: 10px auto 25px;
+    max-width: 800px;
+    padding: 0 20px;
+  }
+  
+  .filtro-propostas select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+
+  .botoes-edicao {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap; /* ajuda no mobile */
+  }
+  
+  .botoes-edicao button {
+    width: auto;
+    padding: 12px 20px;
+  }
+  
+
+
+/* ===== ESTILO EXCLUSIVO PARA A TELA DE CONVITE ===== */
+#telaConvite {
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  min-height: 100vh;
+  padding: 60px 15px;
+  box-sizing: border-box;
+}
+
+#telaConvite .convite-container {
+  max-width: 450px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px 30px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+#telaConvite h2 {
+  color: rgb(167, 0, 0);
+  margin-bottom: 10px;
+}
+
+#telaConvite p {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+#telaConvite input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 18px;
+  margin-top: 15px;
+  margin-bottom: 25px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  text-align: center;
+  letter-spacing: 3px;
+  box-sizing: border-box;
+}
+
+#telaConvite button {
+  background-color: rgb(173, 12, 12);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#telaConvite button:hover {
+  background-color: rgb(140, 0, 0);
+}
+
+  
+/* 🔹 Correção dos botões da Etapa 2 */
+.etapa {
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Container dos botões da etapa 2 */
+#parte2 {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#parte2 .botoes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 25px;
+  width: 100%;
+  max-width: none;
+}
+
+/* Estilo dos botões - LARGURA TOTAL */
+#btnProximo2,
+#btnPularVeiculo {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 15px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  display: block;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* Botão principal "Próximo" */
+#btnProximo2 {
+  background: linear-gradient(135deg, #B22222 0%, #8B0000 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(178, 34, 34, 0.3);
+}
+
+#btnProximo2:hover {
+  background: linear-gradient(135deg, #8B0000 0%, #B22222 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(178, 34, 34, 0.4);
+}
+
+#btnProximo2:disabled {
+  background: #ccc !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Botão secundário "Fazer depois" */
+#btnPularVeiculo {
+  background: transparent;
+  color: #666;
+  border: 2px solid #ddd;
+  position: relative;
+  overflow: hidden;
+}
+
+#btnPularVeiculo:hover {
+  background: #f8f9fa;
+  border-color: #B22222;
+  color: #B22222;
+  transform: translateY(-1px);
+}
+
+#btnPularVeiculo:disabled {
+  background: #f5f5f5 !important;
+  color: #999 !important;
+  border-color: #eee !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* 📱 Responsividade - MANTÉM COLUNA EM TODAS AS TELAS */
+@media (min-width: 768px) {
+  #parte2 .botoes-container {
+    flex-direction: column; /* MANTÉM em coluna */
+    gap: 15px;
+    align-items: stretch; /* Estica para ocupar toda largura */
+  }
+  
+  #btnProximo2,
+  #btnPularVeiculo {
+    width: 100% !important; /* FORÇA 100% da largura */
+    min-width: auto !important;
+    padding: 15px 20px !important;
+  }
+}
+
+/* 📱 Responsividade para telas muito grandes */
+@media (min-width: 1200px) {
+  #parte2 .botoes-container {
+    max-width: 100%;
+  }
+}
+
+/* 🔹 Garantindo largura igual aos campos */
+#parte2 select,
+#parte2 input[type="text"],
+#btnProximo2,
+#btnPularVeiculo {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* 🔹 Melhorias na barra de progresso */
+#progresso {
+  position: relative;
+}
+
+#barra {
+  position: relative;
+}
+
+#barra::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-20px); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(20px); opacity: 0; }
+}
+
+/* 🔹 Melhorias nas etapas */
+/* 🔹 CORREÇÃO DOS BOTÕES - FORÇA LARGURA TOTAL */
+#parte2 .botoes-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 15px;
+  margin-top: 25px;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* FORÇA A LARGURA DOS BOTÕES */
+#parte2 #btnProximo2,
+#parte2 #btnPularVeiculo {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: none !important;
+  padding: 15px 20px !important;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  display: block !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Botão principal "Próximo" */
+#parte2 #btnProximo2 {
+  background: linear-gradient(135deg, #B22222 0%, #8B0000 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(178, 34, 34, 0.3);
+}
+
+#parte2 #btnProximo2:hover {
+  background: linear-gradient(135deg, #8B0000 0%, #B22222 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(178, 34, 34, 0.4);
+}
+
+/* Botão secundário "Fazer depois" */
+#parte2 #btnPularVeiculo {
+  background: transparent !important;
+  color: #666 !important;
+  border: 2px solid #ddd !important;
+}
+
+#parte2 #btnPularVeiculo:hover {
+  background: #f8f9fa !important;
+  border-color: #B22222 !important;
+  color: #B22222 !important;
+  transform: translateY(-1px);
+}
+
+/* FORÇA LARGURA IGUAL EM TODOS OS ELEMENTOS */
+#parte2 select,
+#parte2 input[type="text"],
+#parte2 #btnProximo2,
+#parte2 #btnPularVeiculo {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* 📱 Responsividade - MANTÉM SEMPRE EM COLUNA */
+@media (min-width: 768px) {
+  #parte2 .botoes-container {
+    flex-direction: column !important;
+    gap: 15px;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+  
+  #parte2 #btnProximo2,
+  #parte2 #btnPularVeiculo {
+    width: 100% !important;
+    min-width: none !important;
+    max-width: none !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  #parte2 .botoes-container {
+    max-width: 100% !important;
+  }
+}
+
+/* 🔹 ETAPAS - ESTILO ORIGINAL MELHORADO */
+#etapas {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 90%;
+  max-width: 700px;
+  margin: 30px auto;
+  font-family: Arial, sans-serif;
+}
+
+/* Títulos das etapas - SEM BALÃO VERMELHO */
+#etapas span {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #888;
+  position: relative;
+  padding: 10px 15px;
+  transition: color 0.3s ease-in-out;
+  background: none !important; /* Remove qualquer fundo */
+  border: none !important; /* Remove bordas */
+  box-shadow: none !important; /* Remove sombras */
+  transform: none !important; /* Remove transformações */
+}
+
+/* Etapa ativa - SÓ MUDA A COR */
+#etapas span.ativo {
+  color: #B22222;
+  font-weight: bold;
+}
+
+/* Círculos indicativos das etapas */
+#etapas span::before {
+  content: "";
+  display: block;
+  width: 15px;
+  height: 15px;
+  background-color: #ccc;
+  border-radius: 50%;
+  margin: 0 auto 5px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+/* Círculo ativo */
+#etapas span.ativo::before {
+  background-color: #B22222;
+  box-shadow: 0px 0px 8px rgba(178, 34, 34, 0.3);
+}
+
+/* Círculo preenchido para etapas concluídas */
+#etapas span.concluido::before {
+  background-color: #28a745;
+  box-shadow: 0px 0px 8px rgba(40, 167, 69, 0.5);
+}
+
+/* 🔹 BARRA DE PROGRESSO */
+#progresso {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  margin: 20px 0;
+  overflow: hidden;
+  position: relative;
+}
+
+#barra {
+  height: 100%;
+  background: linear-gradient(90deg, #B22222, #FF6B6B);
+  width: 33%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  position: relative;
+}
+
+#barra::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-20px); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(20px); opacity: 0; }
+}
+
+/* 📱 Responsividade das etapas */
+@media (max-width: 768px) {
+  #etapas {
+    flex-direction: row; /* Mantém em linha no mobile */
+    gap: 5px;
+    width: 100%;
+  }
+
+  #etapas span {
+    font-size: 14px;
+    padding: 8px 5px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #etapas {
+    max-width: 800px;
+  }
+
+  #etapas span {
+    font-size: 18px;
+    padding: 15px 20px;
+  }
+}
+
+
+
+
+
+
+/* 🔹 CORREÇÃO DO CHECKBOX DOS TERMOS DE USO */
+
+/* Container do checkbox dos termos */
+#parte1 div[style*="margin: 20px 0"] {
+  margin: 20px 0 !important;
+  font-size: 14px;
+  color: #333;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important; /* Espaço pequeno entre checkbox e texto */
+  flex-wrap: wrap;
+}
+
+/* Checkbox dos termos */
+#aceiteTermos {
+  margin: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0; /* Não encolhe */
+}
+
+/* Label dos termos */
+label[for="aceiteTermos"] {
+  margin: 0 !important;
+  padding-left: 0 !important; /* Remove padding à esquerda */
+  position: static !important; /* Remove posicionamento absoluto */
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+  display: inline !important;
+}
+
+/* Link dos termos de uso */
+label[for="aceiteTermos"] a {
+  color: #B22222;
+  text-decoration: underline;
+}
+
+label[for="aceiteTermos"] a:hover {
+  color: #8B0000;
+  text-decoration: none;
+}
+
+/* 📱 Responsividade para mobile */
+@media (max-width: 480px) {
+  #parte1 div[style*="margin: 20px 0"] {
+    gap: 6px !important;
+    font-size: 13px;
+  }
+  
+  #aceiteTermos {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}

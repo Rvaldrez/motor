@@ -1,0 +1,209 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.login-container {
+  display: flex;
+  height: 100vh;
+}
+
+.login-image {
+  flex: 1;
+  background-color: #000;
+}
+
+.login-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-form {
+  flex: 1;
+  padding: 60px 40px;
+  background-color: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-form h2 {
+  font-size: 26px;
+  margin-bottom: 10px;
+  color: #111;
+}
+
+.login-form p {
+  margin-bottom: 30px;
+  color: #555;
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background-color: #b00000;
+  color: white;
+  border: none;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-login:hover {
+  background-color: #8a0000;
+}
+
+.extras {
+  margin-top: 15px;
+  text-align: right;
+}
+
+.extras a {
+  color: #b00000;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+@media screen and (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+  }
+
+  .login-image {
+    height: 40vh;
+  }
+
+  .login-form {
+    padding: 40px 20px;
+  }
+}
+
+
+
+
+
+
+
+  /* 🔹 POPUP CENTRALIZADO */
+  .popup-mensagem {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+  
+  .popup-conteudo {
+    background: #fff;
+    padding: 30px 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .popup-conteudo span {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .btn-fechar {
+    padding: 10px 20px;
+    background-color: #d50012;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+
+  #overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999; /* abaixo da sidebar (z-index: 1000) */
+    display: none;
+  }
+  
+
+  
+  /* 🔹 Popup Responsivo */
+  @media (max-width: 480px) {
+    .popup-conteudo {
+      padding: 20px 15px;
+      font-size: 15px;
+      width: 90%;
+    }
+  
+    .btn-fechar {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+    }
+  }
+  
+
+
+  .senha-wrapper {
+    position: relative;
+  }
+  
+  .senha-wrapper input {
+    width: 100%;
+    padding-right: 40px; /* espaço para o ícone */
+  }
+  
+  .toggle-senha {
+    position: absolute;
+    right: 12px;
+    top: 0;
+    bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  
+  .toggle-senha img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease-in-out;
+  }
+  
+  .toggle-senha:hover img {
+    opacity: 1;
+  }
+  
