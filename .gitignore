@@ -1,0 +1,34 @@
+# Environment variables
+.env
+
+# Vendor directory (Composer dependencies)
+vendor/
+
+# Logs
+logs/*.log
+!logs/.gitkeep
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Backup files
+*.bak
+*.backup
