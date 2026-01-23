@@ -1,0 +1,42 @@
+# Exemplo de configuração de cron para o newsletter diário
+# 
+# Para editar o crontab, execute: crontab -e
+# Para listar os cron jobs ativos: crontab -l
+#
+# Importante: Substitua /caminho/completo/para/motor pelo caminho real no servidor
+# Exemplo: /var/www/html/motor ou /home/usuario/public_html/motor
+
+# ========================================
+# Newsletter Diário - Novos Veículos
+# ========================================
+# Executa todos os dias às 9h da manhã
+# Formato: minuto hora dia mês dia_semana comando
+0 9 * * * /usr/bin/php /caminho/completo/para/motor/cron/enviar_newsletter_diario.php
+
+# ========================================
+# Exemplos de Outros Horários
+# ========================================
+
+# Todos os dias às 8h30
+# 30 8 * * * /usr/bin/php /caminho/completo/para/motor/cron/enviar_newsletter_diario.php
+
+# Todos os dias às 10h
+# 0 10 * * * /usr/bin/php /caminho/completo/para/motor/cron/enviar_newsletter_diario.php
+
+# De segunda a sexta às 9h
+# 0 9 * * 1-5 /usr/bin/php /caminho/completo/para/motor/cron/enviar_newsletter_diario.php
+
+# ========================================
+# Redirecionamento de Logs (Opcional)
+# ========================================
+# Para capturar a saída do cron em um arquivo de log separado:
+# 0 9 * * * /usr/bin/php /caminho/completo/para/motor/cron/enviar_newsletter_diario.php >> /caminho/completo/para/motor/logs/cron_output.log 2>&1
+
+# ========================================
+# Notas Importantes
+# ========================================
+# 1. Descubra o caminho do PHP no servidor com: which php
+# 2. O script já gera logs em logs/newsletter_diario.log
+# 3. Certifique-se de que o arquivo .env está configurado
+# 4. Teste o script manualmente antes de configurar o cron
+# 5. Use caminhos absolutos, nunca relativos
