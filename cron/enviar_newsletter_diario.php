@@ -36,7 +36,9 @@ registrarLog("=== Início da execução do newsletter diário ===");
 
 try {
     // 1. Buscar veículos cadastrados ontem com status 'completo' e não em negociação
-    $dataOntem = date('Y-m-d', strtotime('-1 day'));
+    // Usando range de datas para melhor performance (permite uso de índice)
+    $dataOntomInicio = date('Y-m-d 00:00:00', strtotime('-1 day'));
+    $dataOntemFim = date('Y-m-d 23:59:59', strtotime('-1 day'));
     
     $sqlVeiculos = "
         SELECT 
@@ -52,7 +54,8 @@ try {
             WHERE ordem_exibicao = 1
             ORDER BY veiculo_id, id
         ) f ON f.veiculo_id = v.id
-        WHERE DATE(v.data_cadastro) = ?
+        WHERE v.data_cadastro >= ?
+        AND v.data_cadastro <= ?
         AND v.status = 'completo'
         AND v.em_negociacao = 0
         ORDER BY v.data_cadastro DESC
@@ -63,7 +66,7 @@ try {
         throw new Exception("Erro ao preparar query de veículos: " . $mysqli->error);
     }
     
-    $stmtVeiculos->bind_param("s", $dataOntem);
+    $stmtVeiculos->bind_param("ss", $dataOntomInicio, $dataOntemFim);
     $stmtVeiculos->execute();
     $resultVeiculos = $stmtVeiculos->get_result();
     
@@ -156,13 +159,19 @@ try {
             $mail->isSMTP();
             $mail->Host       = 'smtp.hostinger.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = $_ENV['EMAIL_USUARIO'] ?? 'sac@motorgo.co';
-            $mail->Password   = $_ENV['EMAIL_SENHA'] ?? '';
+            
+            // Verificar se as variáveis de ambiente estão configuradas
+            if (empty($_ENV['EMAIL_USUARIO']) || empty($_ENV['EMAIL_SENHA'])) {
+                throw new Exception("Credenciais de email não configuradas no arquivo .env");
+            }
+            
+            $mail->Username   = $_ENV['EMAIL_USUARIO'];
+            $mail->Password   = $_ENV['EMAIL_SENHA'];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
             $mail->Port       = 465;
             $mail->CharSet    = 'UTF-8';
             
-            $mail->setFrom($_ENV['EMAIL_USUARIO'] ?? 'sac@motorgo.co', 'MotorGo');
+            $mail->setFrom($_ENV['EMAIL_USUARIO'], 'MotorGo');
             $mail->addAddress($usuarioEmail, $usuarioNome);
             $mail->isHTML(true);
             
@@ -260,8 +269,8 @@ try {
             registrarLog("Exceção ao enviar email para $usuarioEmail: " . $e->getMessage());
         }
         
-        // Pequeno delay para não sobrecarregar o servidor SMTP
-        usleep(100000); // 0.1 segundo
+        // Delay para não sobrecarregar o servidor SMTP (500ms recomendado)
+        usleep(500000); // 0.5 segundo
     }
     
     $stmtRegistro->close();

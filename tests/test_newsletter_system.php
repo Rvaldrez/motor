@@ -32,7 +32,8 @@ if (!$todosExistem) {
 echo "\n2. Verificando sintaxe PHP...\n";
 $output = [];
 $returnVar = 0;
-exec('php -l ' . __DIR__ . '/../cron/enviar_newsletter_diario.php 2>&1', $output, $returnVar);
+$scriptPath = escapeshellarg(__DIR__ . '/../cron/enviar_newsletter_diario.php');
+exec('php -l ' . $scriptPath . ' 2>&1', $output, $returnVar);
 if ($returnVar === 0) {
     echo "   ✓ Sintaxe PHP válida\n";
 } else {
@@ -90,7 +91,7 @@ $templateElements = [
     'PHPMailer' => 'Importação do PHPMailer',
     'smtp.hostinger.com' => 'Configuração SMTP',
     'newsletter_novo_veiculo' => 'Tipo de email correto',
-    'WHERE DATE(v.data_cadastro) = ?' => 'Filtro de data',
+    'WHERE v.data_cadastro >=' => 'Filtro de data',
     "v.status = 'completo'" => 'Filtro de status completo',
     'v.em_negociacao = 0' => 'Filtro de não em negociação',
     "tipo = 'investidor'" => 'Filtro de tipo investidor',
