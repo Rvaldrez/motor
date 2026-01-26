@@ -25,9 +25,10 @@ O script `enviar_newsletter_diario.php` realiza as seguintes tarefas:
    - Localização
    - Valor FIPE
 
-4. **Registra envios**: Armazena logs na tabela `emails_automaticos` com:
+4. **Registra envios**: Armazena logs na tabela `newsletter` com:
    - `tipo = 'newsletter_novo_veiculo'`
    - Status do envio (enviado/erro)
+   - Quantidade de veículos enviados
 
 ## ⚙️ Requisitos
 
@@ -38,7 +39,7 @@ O script `enviar_newsletter_diario.php` realiza as seguintes tarefas:
 
 ### Banco de Dados
 - MySQL 5.7 ou superior
-- Tabela `emails_automaticos` (criada automaticamente pelo script)
+- Tabela `newsletter` (criada automaticamente pelo script)
 
 ### Servidor SMTP
 - Credenciais válidas de servidor SMTP
@@ -210,8 +211,7 @@ tail -f /var/log/newsletter_diario.log
 
 ```sql
 -- Ver últimos 20 envios
-SELECT * FROM emails_automaticos 
-WHERE tipo = 'newsletter_novo_veiculo' 
+SELECT * FROM newsletter 
 ORDER BY data_envio DESC 
 LIMIT 20;
 
@@ -219,11 +219,19 @@ LIMIT 20;
 SELECT DATE(data_envio) as data, 
        COUNT(*) as total,
        SUM(CASE WHEN status = 'enviado' THEN 1 ELSE 0 END) as sucessos,
-       SUM(CASE WHEN status = 'erro' THEN 1 ELSE 0 END) as falhas
-FROM emails_automaticos
-WHERE tipo = 'newsletter_novo_veiculo'
+       SUM(CASE WHEN status = 'erro' THEN 1 ELSE 0 END) as falhas,
+       AVG(veiculos_enviados) as media_veiculos
+FROM newsletter
 GROUP BY DATE(data_envio)
 ORDER BY data DESC;
+
+-- Investidores mais ativos
+SELECT email, COUNT(*) as total_recebidos
+FROM newsletter
+WHERE status = 'enviado'
+GROUP BY email
+ORDER BY total_recebidos DESC
+LIMIT 10;
 ```
 
 ## 🎨 Personalização do Email
@@ -343,24 +351,36 @@ WHERE tipo = 'investidor'
   AND status_cadastro = 'completo';
 ```
 
-## 📊 Estrutura da Tabela emails_automaticos
+## 📊 Estrutura da Tabela newsletter
 
 A tabela é criada automaticamente pelo script com a seguinte estrutura:
 
 ```sql
-CREATE TABLE emails_automaticos (
+CREATE TABLE newsletter (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT NOT NULL,
     email VARCHAR(255) NOT NULL,
-    tipo VARCHAR(100) NOT NULL,
-    assunto VARCHAR(255),
-    status VARCHAR(50),
+    assunto VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    veiculos_enviados INT DEFAULT 0,
     data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+    erro_mensagem TEXT NULL,
     INDEX idx_usuario (usuario_id),
-    INDEX idx_tipo (tipo),
+    INDEX idx_email (email),
+    INDEX idx_status (status),
     INDEX idx_data (data_envio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
+
+**Campos:**
+- `id`: Identificador único
+- `usuario_id`: ID do investidor
+- `email`: Email do destinatário
+- `assunto`: Assunto do email enviado
+- `status`: 'enviado' ou 'erro'
+- `veiculos_enviados`: Quantidade de veículos no email
+- `data_envio`: Data/hora do envio
+- `erro_mensagem`: Mensagem de erro (se houver)
 
 ## 📝 Notas Importantes
 
@@ -372,7 +392,7 @@ CREATE TABLE emails_automaticos (
 
 4. **Teste antes de agendar**: Sempre teste o script manualmente antes de agendar via CronJob.
 
-5. **Backup**: Faça backup regular da tabela `emails_automaticos` para auditoria.
+5. **Backup**: Faça backup regular da tabela `newsletter` para auditoria.
 
 ## 📞 Suporte
 

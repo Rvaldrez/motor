@@ -109,14 +109,14 @@ if (!$result) {
     }
 }
 
-// Verificar se tabela emails_automaticos existe
-echo "\nVerificando tabela emails_automaticos...\n";
-$result = $mysqli->query("SHOW TABLES LIKE 'emails_automaticos'");
+// Verificar se tabela newsletter existe
+echo "\nVerificando tabela newsletter...\n";
+$result = $mysqli->query("SHOW TABLES LIKE 'newsletter'");
 if ($result->num_rows > 0) {
-    echo "✓ Tabela emails_automaticos existe\n";
+    echo "✓ Tabela newsletter existe\n";
     
     // Verificar estrutura
-    $result = $mysqli->query("DESCRIBE emails_automaticos");
+    $result = $mysqli->query("DESCRIBE newsletter");
     if ($result) {
         echo "\nEstrutura da tabela:\n";
         while ($row = $result->fetch_assoc()) {
@@ -125,14 +125,24 @@ if ($result->num_rows > 0) {
     }
     
     // Verificar registros recentes
-    $result = $mysqli->query("SELECT COUNT(*) as total FROM emails_automaticos WHERE tipo = 'newsletter_novo_veiculo'");
+    $result = $mysqli->query("SELECT COUNT(*) as total FROM newsletter");
     if ($result) {
         $row = $result->fetch_assoc();
         echo "\nTotal de newsletters enviadas: " . $row['total'] . "\n";
+        
+        // Mostrar estatísticas
+        $result = $mysqli->query("SELECT status, COUNT(*) as total FROM newsletter GROUP BY status");
+        if ($result && $result->num_rows > 0) {
+            echo "\nEstatísticas por status:\n";
+            while ($row = $result->fetch_assoc()) {
+                echo "  - " . $row['status'] . ": " . $row['total'] . "\n";
+            }
+        }
     }
 } else {
-    echo "⚠ Tabela emails_automaticos não existe\n";
+    echo "⚠ Tabela newsletter não existe\n";
     echo "  (Será criada automaticamente na primeira execução do script principal)\n";
+    echo "  Ou execute: mysql < criar_tabela_newsletter.sql\n";
 }
 
 // Testar geração de HTML (sem enviar)

@@ -66,12 +66,13 @@ WHERE tipo = 'investidor'
 ```
 
 ### 6. Log de Emails ✓
-- Tabela `emails_automaticos` criada automaticamente
+- Tabela `newsletter` criada automaticamente
 - Registra cada envio com:
-  - `tipo = 'newsletter_novo_veiculo'`
   - Status (enviado/erro)
   - Data e hora
   - Informações do destinatário
+  - Quantidade de veículos enviados
+  - Mensagem de erro (se houver)
 
 ### 7. PHPMailer com SMTP ✓
 - Configuração baseada em `helpers/email_proposta.php`
@@ -153,10 +154,18 @@ php enviar_newsletter_diario.php
 
 ### Monitorar Logs
 ```sql
-SELECT * FROM emails_automaticos 
-WHERE tipo = 'newsletter_novo_veiculo' 
+SELECT * FROM newsletter 
 ORDER BY data_envio DESC 
 LIMIT 20;
+
+-- Estatísticas
+SELECT DATE(data_envio) as data,
+       COUNT(*) as total,
+       SUM(CASE WHEN status='enviado' THEN 1 ELSE 0 END) as sucessos,
+       AVG(veiculos_enviados) as media_veiculos
+FROM newsletter
+GROUP BY DATE(data_envio)
+ORDER BY data DESC;
 ```
 
 ## 📊 Métricas de Implementação
@@ -184,7 +193,7 @@ LIMIT 20;
 
 ## 📝 Notas Importantes
 
-1. **Backup**: O script cria automaticamente a tabela `emails_automaticos` se não existir
+1. **Backup**: O script cria automaticamente a tabela `newsletter` se não existir
 2. **Performance**: Sleep de 1s entre envios para não sobrecarregar SMTP
 3. **Logs**: Cada execução gera log detalhado no stdout
 4. **Fallback**: Placeholder SVG inline se veículo não tiver foto

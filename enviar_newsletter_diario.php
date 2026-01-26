@@ -401,30 +401,34 @@ function enviarEmail($destinatario, $nomeDestinatario, $assunto, $corpoHTML) {
 }
 
 /**
- * Registra envio de email na tabela emails_automaticos
+ * Registra envio de email na tabela newsletter
  */
-function registrarEnvioEmail($mysqli, $usuarioId, $email, $assunto, $status) {
+function registrarEnvioEmail($mysqli, $usuarioId, $email, $assunto, $status, $qtdVeiculos = 0, $erroMensagem = null) {
     // Verifica se a tabela existe, senão cria
-    $mysqli->query("CREATE TABLE IF NOT EXISTS emails_automaticos (
+    $mysqli->query("CREATE TABLE IF NOT EXISTS newsletter (
         id INT AUTO_INCREMENT PRIMARY KEY,
         usuario_id INT NOT NULL,
         email VARCHAR(255) NOT NULL,
-        tipo VARCHAR(100) NOT NULL,
-        assunto VARCHAR(255),
-        status VARCHAR(50),
+        assunto VARCHAR(255) NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        veiculos_enviados INT DEFAULT 0,
         data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+        erro_mensagem TEXT NULL,
         INDEX idx_usuario (usuario_id),
-        INDEX idx_tipo (tipo),
-        INDEX idx_data (data_envio)
+        INDEX idx_email (email),
+        INDEX idx_status (status),
+        INDEX idx_data (data_envio),
+        INDEX idx_data_status (data_envio, status),
+        INDEX idx_usuario_data (usuario_id, data_envio)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     
     $stmt = $mysqli->prepare(
-        "INSERT INTO emails_automaticos (usuario_id, email, tipo, assunto, status, data_envio) 
-         VALUES (?, ?, 'newsletter_novo_veiculo', ?, ?, NOW())"
+        "INSERT INTO newsletter (usuario_id, email, assunto, status, veiculos_enviados, erro_mensagem, data_envio) 
+         VALUES (?, ?, ?, ?, ?, ?, NOW())"
     );
     
     if ($stmt) {
-        $stmt->bind_param("isss", $usuarioId, $email, $assunto, $status);
+        $stmt->bind_param("isssis", $usuarioId, $email, $assunto, $status, $qtdVeiculos, $erroMensagem);
         $stmt->execute();
         $stmt->close();
     }
@@ -498,7 +502,9 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
             $investidor['id'],
             $investidor['email'],
             EMAIL_SUBJECT,
-            $status
+            $status,
+            count($veiculos),  // Quantidade de veículos enviados
+            null  // Sem mensagem de erro (poderia capturar do PHPMailer)
         );
         
         // Pausa entre envios para evitar sobrecarga do servidor SMTP

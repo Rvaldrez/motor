@@ -135,8 +135,8 @@ Primeiros 5 investidores:
 ...
 ----------------------------------------------------
 
-Verificando tabela emails_automaticos...
-✓ Tabela emails_automaticos existe (ou será criada)
+Verificando tabela newsletter...
+✓ Tabela newsletter existe (ou será criada)
 ```
 
 ### 3.3 Possíveis Problemas e Soluções
@@ -378,16 +378,22 @@ mysql -u seu_usuario -p
 USE u218663118_motorgo;
 
 -- Ver últimos emails enviados
-SELECT * FROM emails_automaticos 
-WHERE tipo = 'newsletter_novo_veiculo' 
+SELECT * FROM newsletter 
 ORDER BY data_envio DESC 
 LIMIT 10;
 
 -- Contar por status
 SELECT status, COUNT(*) as total 
-FROM emails_automaticos 
-WHERE tipo = 'newsletter_novo_veiculo'
+FROM newsletter
 GROUP BY status;
+
+-- Estatísticas com veículos
+SELECT DATE(data_envio) as data,
+       COUNT(*) as total,
+       AVG(veiculos_enviados) as media_veiculos
+FROM newsletter
+GROUP BY DATE(data_envio)
+ORDER BY data DESC;
 ```
 
 ### 6.5 IMPORTANTE: Reverter a mudança de teste
@@ -464,9 +470,11 @@ Crie `verificar_newsletter.sh`:
 echo "=== Status Newsletter MotorGo ==="
 echo ""
 echo "Últimos envios (últimas 24h):"
-mysql -u usuario -p -e "SELECT DATE(data_envio) as data, status, COUNT(*) as total FROM u218663118_motorgo.emails_automaticos WHERE tipo='newsletter_novo_veiculo' AND data_envio >= DATE_SUB(NOW(), INTERVAL 24 HOUR) GROUP BY DATE(data_envio), status;"
+mysql -u usuario -p -e "SELECT DATE(data_envio) as data, status, COUNT(*) as total, AVG(veiculos_enviados) as media_veiculos FROM u218663118_motorgo.newsletter WHERE data_envio >= DATE_SUB(NOW(), INTERVAL 24 HOUR) GROUP BY DATE(data_envio), status;"
 echo ""
 echo "Último envio:"
+mysql -u usuario -p -e "SELECT * FROM u218663118_motorgo.newsletter ORDER BY data_envio DESC LIMIT 1;"
+```
 mysql -u usuario -p -e "SELECT * FROM u218663118_motorgo.emails_automaticos WHERE tipo='newsletter_novo_veiculo' ORDER BY data_envio DESC LIMIT 1;"
 ```
 
