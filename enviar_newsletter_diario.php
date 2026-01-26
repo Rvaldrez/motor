@@ -25,25 +25,27 @@
 // ============================================================================
 
 // Configurações do Banco de Dados
-define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'u218663118_motorgo');
-define('DB_PASS', 'MotorGo@2025_Vic');
-define('DB_NAME', 'u218663118_motorgo');
+// Recomendado: Use variáveis de ambiente em produção para maior segurança
+define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
+define('DB_USER', getenv('DB_USER') ?: 'u218663118_motorgo');
+define('DB_PASS', getenv('DB_PASS') ?: 'MotorGo@2025_Vic');
+define('DB_NAME', getenv('DB_NAME') ?: 'u218663118_motorgo');
 
 // Configurações SMTP
-define('SMTP_HOST', 'smtp.hostinger.com');
-define('SMTP_PORT', 465); // 587 para TLS, 465 para SSL
-define('SMTP_USERNAME', 'sac@motorgo.co');
-define('SMTP_PASSWORD', 'R_valdrez23');
-define('SMTP_FROM_EMAIL', 'sac@motorgo.co');
-define('SMTP_FROM_NAME', 'MotorGo');
-define('SMTP_ENCRYPTION', 'ssl'); // 'tls' ou 'ssl'
+// Recomendado: Use variáveis de ambiente em produção para maior segurança
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.hostinger.com');
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 465); // 587 para TLS, 465 para SSL
+define('SMTP_USERNAME', getenv('SMTP_USERNAME') ?: 'sac@motorgo.co');
+define('SMTP_PASSWORD', getenv('SMTP_PASSWORD') ?: 'R_valdrez23');
+define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: 'sac@motorgo.co');
+define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'MotorGo');
+define('SMTP_ENCRYPTION', getenv('SMTP_ENCRYPTION') ?: 'ssl'); // 'tls' ou 'ssl'
 
 // Configurações do Email
-define('EMAIL_SUBJECT', 'Novos Veículos Disponíveis - MotorGo');
+define('EMAIL_SUBJECT', getenv('EMAIL_SUBJECT') ?: 'Novos Veículos Disponíveis - MotorGo');
 
 // URL base do sistema (para links e imagens)
-define('BASE_URL', 'https://motorgo.co');
+define('BASE_URL', getenv('BASE_URL') ?: 'https://motorgo.co');
 
 // ============================================================================
 // CARREGAR PHPMAILER
@@ -345,7 +347,13 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
         <?php if (count($veiculos) > 0): ?>
         <div class="veiculos-container">
             <?php foreach ($veiculos as $veiculo): 
-                $foto = !empty($veiculo['foto_principal']) ? BASE_URL . '/' . $veiculo['foto_principal'] : BASE_URL . '/imagens/default_car.png';
+                // Usar foto do veículo ou placeholder base64 se não houver foto
+                if (!empty($veiculo['foto_principal'])) {
+                    $foto = BASE_URL . '/' . $veiculo['foto_principal'];
+                } else {
+                    // Placeholder SVG inline em base64 - não depende de arquivo externo
+                    $foto = 'data:image/svg+xml;base64,' . base64_encode('<?xml version="1.0" encoding="UTF-8"?><svg width="400" height="300" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="300" fill="#e0e0e0"/><text x="50%" y="50%" font-family="Arial" font-size="24" fill="#666" text-anchor="middle" dominant-baseline="middle">Sem Imagem</text></svg>');
+                }
                 $preco = number_format($veiculo['preco'], 2, ',', '.');
                 $km = number_format($veiculo['quilometragem'], 0, '', '.');
                 $localizacao = trim($veiculo['usuario_cidade'] . '/' . $veiculo['usuario_estado']);

@@ -48,6 +48,61 @@ O script `enviar_newsletter_diario.php` realiza as seguintes tarefas:
 
 ### Passo 1: Configurar Credenciais
 
+#### Opção A: Variáveis de Ambiente (Recomendado para Produção)
+
+Para maior segurança, configure as credenciais usando variáveis de ambiente:
+
+**Linux/macOS:**
+```bash
+export DB_HOST="127.0.0.1"
+export DB_USER="seu_usuario"
+export DB_PASS="sua_senha"
+export DB_NAME="nome_do_banco"
+export SMTP_HOST="smtp.seuservidor.com"
+export SMTP_PORT="465"
+export SMTP_USERNAME="seu_email@dominio.com"
+export SMTP_PASSWORD="sua_senha_smtp"
+export SMTP_FROM_EMAIL="seu_email@dominio.com"
+export SMTP_FROM_NAME="MotorGo"
+export SMTP_ENCRYPTION="ssl"
+export BASE_URL="https://seudominio.com"
+```
+
+**Windows:**
+```cmd
+set DB_HOST=127.0.0.1
+set DB_USER=seu_usuario
+set DB_PASS=sua_senha
+set DB_NAME=nome_do_banco
+set SMTP_HOST=smtp.seuservidor.com
+set SMTP_PORT=465
+set SMTP_USERNAME=seu_email@dominio.com
+set SMTP_PASSWORD=sua_senha_smtp
+set SMTP_FROM_EMAIL=seu_email@dominio.com
+set SMTP_FROM_NAME=MotorGo
+set SMTP_ENCRYPTION=ssl
+set BASE_URL=https://seudominio.com
+```
+
+**Arquivo .env (com php-dotenv):**
+Crie um arquivo `.env` no diretório do projeto (não versione este arquivo):
+```
+DB_HOST=127.0.0.1
+DB_USER=seu_usuario
+DB_PASS=sua_senha
+DB_NAME=nome_do_banco
+SMTP_HOST=smtp.seuservidor.com
+SMTP_PORT=465
+SMTP_USERNAME=seu_email@dominio.com
+SMTP_PASSWORD=sua_senha_smtp
+SMTP_FROM_EMAIL=seu_email@dominio.com
+SMTP_FROM_NAME=MotorGo
+SMTP_ENCRYPTION=ssl
+BASE_URL=https://seudominio.com
+```
+
+#### Opção B: Editar Diretamente no Script (Apenas para Desenvolvimento)
+
 Edite o arquivo `enviar_newsletter_diario.php` e ajuste as seguintes constantes:
 
 ```php

@@ -6,12 +6,13 @@
  * Útil para validar queries, template HTML e lógica de negócio.
  */
 
-// Simular environment
-define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'u218663118_motorgo');
-define('DB_PASS', 'MotorGo@2025_Vic');
-define('DB_NAME', 'u218663118_motorgo');
-define('BASE_URL', 'https://motorgo.co');
+// Carregar configurações do ambiente ou usar valores padrão
+// Recomendado: Configure variáveis de ambiente em produção
+define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
+define('DB_USER', getenv('DB_USER') ?: 'u218663118_motorgo');
+define('DB_PASS', getenv('DB_PASS') ?: 'MotorGo@2025_Vic');
+define('DB_NAME', getenv('DB_NAME') ?: 'u218663118_motorgo');
+define('BASE_URL', getenv('BASE_URL') ?: 'https://motorgo.co');
 
 echo "====================================================\n";
 echo "TESTE - NEWSLETTER DIÁRIA\n";
