@@ -74,16 +74,18 @@ WHERE tipo = 'investidor'
   - Informações do destinatário
 
 ### 7. PHPMailer com SMTP ✓
-- Configuração completa de SMTP
-- Suporte para SSL/TLS
+- Configuração baseada em `helpers/email_proposta.php`
+- Usa credenciais do arquivo `.env` (EMAIL_USUARIO e EMAIL_SENHA)
+- Suporte para SSL (porta 465)
 - Encoding UTF-8
-- Tratamento de erros
+- Tratamento de erros com log
 
 ### 8. Configuração SMTP ✓
-- Seção dedicada no início do script
-- Suporte a variáveis de ambiente
-- Valores padrão para desenvolvimento
-- Template .env.example incluído
+- Integrado com sistema existente
+- Banco de dados: usa `conexao_bd.php`
+- SMTP: usa arquivo `.env` do sistema
+- Template `.env.example` incluído
+- Centralização de credenciais
 
 ### 9. Design Profissional ✓
 - Template HTML responsivo
@@ -106,18 +108,19 @@ Documentação completa para:
 ## 🔒 Segurança
 
 ### Melhorias Implementadas
-1. **Variáveis de Ambiente**: Suporte para credentials via getenv()
+1. **Centralização de Credenciais**: Usa `conexao_bd.php` e arquivo `.env`
 2. **Prepared Statements**: Proteção contra SQL injection
 3. **XSS Prevention**: htmlspecialchars() em todos os outputs
 4. **No External Dependencies**: Imagem placeholder em base64
 5. **Template .env.example**: Não expõe credenciais reais
+6. **Integração com Sistema**: Reutiliza infraestrutura existente
 
 ### Validações de Segurança
 - ✅ CodeQL Scanner: Nenhum problema encontrado
 - ✅ Code Review: Todos os comentários endereçados
 - ✅ SQL Injection: Queries parametrizadas
 - ✅ XSS: Output sanitizado
-- ✅ Credentials: Suporte a variáveis de ambiente
+- ✅ Credentials: Centralizadas em arquivos do sistema
 
 ## 📧 Template de Email
 

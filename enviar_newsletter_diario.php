@@ -9,7 +9,7 @@
  * 
  * REQUISITOS:
  * - PHPMailer instalado via Composer
- * - Configuração SMTP válida
+ * - Arquivo .env com credenciais SMTP
  * - Acesso ao banco de dados MySQL
  * - Tabela emails_automaticos criada
  * 
@@ -21,34 +21,7 @@
  */
 
 // ============================================================================
-// CONFIGURAÇÕES - MODIFIQUE CONFORME NECESSÁRIO
-// ============================================================================
-
-// Configurações do Banco de Dados
-// Recomendado: Use variáveis de ambiente em produção para maior segurança
-define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
-define('DB_USER', getenv('DB_USER') ?: 'u218663118_motorgo');
-define('DB_PASS', getenv('DB_PASS') ?: 'MotorGo@2025_Vic');
-define('DB_NAME', getenv('DB_NAME') ?: 'u218663118_motorgo');
-
-// Configurações SMTP
-// Recomendado: Use variáveis de ambiente em produção para maior segurança
-define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.hostinger.com');
-define('SMTP_PORT', getenv('SMTP_PORT') ?: 465); // 587 para TLS, 465 para SSL
-define('SMTP_USERNAME', getenv('SMTP_USERNAME') ?: 'sac@motorgo.co');
-define('SMTP_PASSWORD', getenv('SMTP_PASSWORD') ?: 'R_valdrez23');
-define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: 'sac@motorgo.co');
-define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'MotorGo');
-define('SMTP_ENCRYPTION', getenv('SMTP_ENCRYPTION') ?: 'ssl'); // 'tls' ou 'ssl'
-
-// Configurações do Email
-define('EMAIL_SUBJECT', getenv('EMAIL_SUBJECT') ?: 'Novos Veículos Disponíveis - MotorGo');
-
-// URL base do sistema (para links e imagens)
-define('BASE_URL', getenv('BASE_URL') ?: 'https://motorgo.co');
-
-// ============================================================================
-// CARREGAR PHPMAILER
+// CARREGAR DEPENDÊNCIAS
 // ============================================================================
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -57,23 +30,26 @@ use PHPMailer\PHPMailer\Exception;
 // Carregar autoload do Composer
 require_once __DIR__ . '/vendor/autoload.php';
 
+// Carregar conexão com banco de dados
+require_once __DIR__ . '/conexao_bd.php';
+
+// Carregar variáveis de ambiente
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+// ============================================================================
+// CONFIGURAÇÕES
+// ============================================================================
+
+// Configurações do Email
+define('EMAIL_SUBJECT', 'Novos Veículos Disponíveis - MotorGo');
+
+// URL base do sistema (para links e imagens)
+define('BASE_URL', 'https://motorgo.co');
+
 // ============================================================================
 // FUNÇÕES AUXILIARES
 // ============================================================================
-
-/**
- * Conecta ao banco de dados
- */
-function conectarBanco() {
-    $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-    
-    if ($mysqli->connect_error) {
-        die("Erro na conexão com o banco: " . $mysqli->connect_error);
-    }
-    
-    $mysqli->set_charset("utf8");
-    return $mysqli;
-}
 
 /**
  * Busca veículos cadastrados ontem com status completo e não em negociação
@@ -392,41 +368,34 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
 }
 
 /**
- * Envia email usando PHPMailer
+ * Envia email usando PHPMailer (baseado em helpers/email_proposta.php)
  */
 function enviarEmail($destinatario, $nomeDestinatario, $assunto, $corpoHTML) {
     try {
         $mail = new PHPMailer(true);
-        
-        // Configurações do servidor SMTP
         $mail->isSMTP();
-        $mail->Host = SMTP_HOST;
-        $mail->SMTPAuth = true;
-        $mail->Username = SMTP_USERNAME;
-        $mail->Password = SMTP_PASSWORD;
-        
-        if (SMTP_ENCRYPTION === 'ssl') {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        } else {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        }
-        
-        $mail->Port = SMTP_PORT;
-        $mail->CharSet = 'UTF-8';
-        
-        // Remetente e destinatário
-        $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+        $mail->Host       = 'smtp.hostinger.com';
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $_ENV['EMAIL_USUARIO'];
+        $mail->Password   = $_ENV['EMAIL_SENHA'];
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port       = 465;
+        $mail->CharSet    = 'UTF-8';
+
+        $mail->setFrom($_ENV['EMAIL_USUARIO'], 'MotorGo');
         $mail->addAddress($destinatario, $nomeDestinatario);
-        
-        // Conteúdo do email
         $mail->isHTML(true);
         $mail->Subject = $assunto;
-        $mail->Body = $corpoHTML;
-        
-        // Enviar
+        $mail->Body    = $corpoHTML;
+
         return $mail->send();
     } catch (Exception $e) {
-        error_log("Erro ao enviar email para $destinatario: " . $e->getMessage());
+        // Log de erros
+        $logDir = __DIR__ . '/logs';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+        file_put_contents($logDir . '/email_erros.log', date('Y-m-d H:i:s') . " - Erro ao enviar e-mail para $destinatario: " . $e->getMessage() . "\n", FILE_APPEND);
         return false;
     }
 }
@@ -470,8 +439,7 @@ echo "NEWSLETTER DIÁRIA - NOVOS VEÍCULOS\n";
 echo "Início: " . date('Y-m-d H:i:s') . "\n";
 echo "====================================================\n\n";
 
-// Conectar ao banco
-$mysqli = conectarBanco();
+// Usar conexão do banco já estabelecida em conexao_bd.php
 echo "✓ Conectado ao banco de dados\n\n";
 
 // Buscar veículos novos

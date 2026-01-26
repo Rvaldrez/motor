@@ -6,26 +6,16 @@
  * Útil para validar queries, template HTML e lógica de negócio.
  */
 
-// Carregar configurações do ambiente ou usar valores padrão
-// Recomendado: Configure variáveis de ambiente em produção
-define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
-define('DB_USER', getenv('DB_USER') ?: 'u218663118_motorgo');
-define('DB_PASS', getenv('DB_PASS') ?: 'MotorGo@2025_Vic');
-define('DB_NAME', getenv('DB_NAME') ?: 'u218663118_motorgo');
-define('BASE_URL', getenv('BASE_URL') ?: 'https://motorgo.co');
+// Carregar conexão com banco de dados
+require_once __DIR__ . '/conexao_bd.php';
+
+define('BASE_URL', 'https://motorgo.co');
 
 echo "====================================================\n";
 echo "TESTE - NEWSLETTER DIÁRIA\n";
 echo "====================================================\n\n";
 
-// Conectar ao banco
-$mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-
-if ($mysqli->connect_error) {
-    die("✗ Erro na conexão: " . $mysqli->connect_error . "\n");
-}
-
-$mysqli->set_charset("utf8");
+// Usar conexão do banco já estabelecida em conexao_bd.php
 echo "✓ Conectado ao banco de dados\n\n";
 
 // Testar query de veículos

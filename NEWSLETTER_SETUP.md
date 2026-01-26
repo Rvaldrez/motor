@@ -48,82 +48,31 @@ O script `enviar_newsletter_diario.php` realiza as seguintes tarefas:
 
 ### Passo 1: Configurar Credenciais
 
-#### Opção A: Variáveis de Ambiente (Recomendado para Produção)
+O script utiliza os arquivos de configuração existentes do sistema:
+- **Banco de Dados**: `conexao_bd.php` (já configurado)
+- **Email SMTP**: Arquivo `.env` com variáveis `EMAIL_USUARIO` e `EMAIL_SENHA`
 
-Para maior segurança, configure as credenciais usando variáveis de ambiente:
+#### Configurar arquivo .env
 
-**Linux/macOS:**
-```bash
-export DB_HOST="127.0.0.1"
-export DB_USER="seu_usuario"
-export DB_PASS="sua_senha"
-export DB_NAME="nome_do_banco"
-export SMTP_HOST="smtp.seuservidor.com"
-export SMTP_PORT="465"
-export SMTP_USERNAME="seu_email@dominio.com"
-export SMTP_PASSWORD="sua_senha_smtp"
-export SMTP_FROM_EMAIL="seu_email@dominio.com"
-export SMTP_FROM_NAME="MotorGo"
-export SMTP_ENCRYPTION="ssl"
-export BASE_URL="https://seudominio.com"
+Crie ou edite o arquivo `.env` na raiz do projeto com as credenciais de email:
+
+```
+EMAIL_USUARIO=seu_email@dominio.com
+EMAIL_SENHA=sua_senha_smtp
 ```
 
-**Windows:**
-```cmd
-set DB_HOST=127.0.0.1
-set DB_USER=seu_usuario
-set DB_PASS=sua_senha
-set DB_NAME=nome_do_banco
-set SMTP_HOST=smtp.seuservidor.com
-set SMTP_PORT=465
-set SMTP_USERNAME=seu_email@dominio.com
-set SMTP_PASSWORD=sua_senha_smtp
-set SMTP_FROM_EMAIL=seu_email@dominio.com
-set SMTP_FROM_NAME=MotorGo
-set SMTP_ENCRYPTION=ssl
-set BASE_URL=https://seudominio.com
+**Exemplo completo do .env:**
+```
+# Credenciais de Email SMTP
+EMAIL_USUARIO=sac@motorgo.co
+EMAIL_SENHA=sua_senha_smtp_aqui
+
+# Configurações opcionais
+BASE_URL=https://motorgo.co
+EMAIL_SUBJECT=Novos Veículos Disponíveis - MotorGo
 ```
 
-**Arquivo .env (com php-dotenv):**
-Crie um arquivo `.env` no diretório do projeto (não versione este arquivo):
-```
-DB_HOST=127.0.0.1
-DB_USER=seu_usuario
-DB_PASS=sua_senha
-DB_NAME=nome_do_banco
-SMTP_HOST=smtp.seuservidor.com
-SMTP_PORT=465
-SMTP_USERNAME=seu_email@dominio.com
-SMTP_PASSWORD=sua_senha_smtp
-SMTP_FROM_EMAIL=seu_email@dominio.com
-SMTP_FROM_NAME=MotorGo
-SMTP_ENCRYPTION=ssl
-BASE_URL=https://seudominio.com
-```
-
-#### Opção B: Editar Diretamente no Script (Apenas para Desenvolvimento)
-
-Edite o arquivo `enviar_newsletter_diario.php` e ajuste as seguintes constantes:
-
-```php
-// Configurações do Banco de Dados
-define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'seu_usuario');
-define('DB_PASS', 'sua_senha');
-define('DB_NAME', 'nome_do_banco');
-
-// Configurações SMTP
-define('SMTP_HOST', 'smtp.seuservidor.com');
-define('SMTP_PORT', 465);
-define('SMTP_USERNAME', 'seu_email@dominio.com');
-define('SMTP_PASSWORD', 'sua_senha_smtp');
-define('SMTP_FROM_EMAIL', 'seu_email@dominio.com');
-define('SMTP_FROM_NAME', 'MotorGo');
-define('SMTP_ENCRYPTION', 'ssl'); // 'tls' ou 'ssl'
-
-// URL base do sistema
-define('BASE_URL', 'https://seudominio.com');
-```
+> **Nota**: O arquivo `.env` não deve ser versionado no Git. Já existe um `.env.example` como template.
 
 ### Passo 2: Testar o Script Manualmente
 
