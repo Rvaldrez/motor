@@ -152,6 +152,12 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
             text-align: center;
         }
         
+        .email-header img.logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        
         .email-header h1 {
             color: #B22222;
             font-size: 28px;
@@ -188,6 +194,10 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
         .veiculos-container {
             padding: 20px;
             background-color: #f9f9f9;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-between;
         }
         
         /* Card de veículo */
@@ -197,6 +207,8 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
             margin-bottom: 20px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex: 0 0 calc(50% - 10px);
+            box-sizing: border-box;
         }
         
         .veiculo-card img {
@@ -274,6 +286,14 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
         
         /* Responsividade */
         @media only screen and (max-width: 600px) {
+            .veiculos-container {
+                flex-direction: column;
+            }
+            
+            .veiculo-card {
+                flex: 0 0 100%;
+            }
+            
             .email-header h1 {
                 font-size: 22px;
             }
@@ -308,15 +328,14 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
     <div class="email-container">
         <!-- Header -->
         <div class="email-header">
-            <div class="logo-text">MOTORGO</div>
+            <img src="<?php echo BASE_URL; ?>/imagens/logo_motorgo_blk.png" alt="MotorGo Logo" class="logo">
             <h1>Novos Veículos Disponíveis</h1>
         </div>
         
         <!-- Introdução -->
         <div class="email-intro">
             <h2>Olá, <?php echo htmlspecialchars($nomeInvestidor); ?>!</h2>
-            <p>Temos <?php echo count($veiculos); ?> <?php echo count($veiculos) == 1 ? 'novo veículo' : 'novos veículos'; ?> disponível<?php echo count($veiculos) == 1 ? '' : 'eis'; ?> para investimento cadastrado<?php echo count($veiculos) == 1 ? '' : 's'; ?> nas últimas 24 horas.</p>
-            <p>Confira abaixo as oportunidades e garanta o melhor investimento!</p>
+            <p>Confira os veículos cadastrados nas últimas 24 horas. Faça a sua oferta e garanta a oportunidade de lucrar na revenda!</p>
         </div>
         
         <!-- Veículos -->
@@ -342,8 +361,7 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
                     <p><strong>Ano de Fabricação:</strong> <?php echo htmlspecialchars($veiculo['ano_fabrica']); ?></p>
                     <p><strong>Quilometragem:</strong> <?php echo htmlspecialchars($km); ?> km</p>
                     <p><strong>Localização:</strong> <?php echo htmlspecialchars($localizacao); ?></p>
-                    <p class="veiculo-preco">Valor FIPE: R$ <?php echo htmlspecialchars($preco); ?></p>
-                    <a href="<?php echo BASE_URL; ?>/painel_investidor.php" class="btn-cta">Ver Detalhes e Investir</a>
+                    <a href="<?php echo BASE_URL; ?>/painel_investidor.php" class="btn-cta">Ver detalhes</a>
                 </div>
             </div>
             <?php endforeach; ?>
