@@ -1,9 +1,14 @@
 <?php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Dotenv\Dotenv;
 
 require 'vendor/autoload.php'; // se usar Composer
 require_once 'conexao_bd.php';
+
+// Carrega variáveis de ambiente
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
 function enviarEmailNotificacao($destinatarioEmail, $destinatarioNome, $tipo, $dados = []) {
     $mail = new PHPMailer(true);
@@ -11,14 +16,15 @@ function enviarEmailNotificacao($destinatarioEmail, $destinatarioNome, $tipo, $d
     try {
         // Configuração SMTP
         $mail->isSMTP();
-        $mail->Host       = 'smtp.seudominio.com'; // Ex: smtp.gmail.com
+        $mail->Host       = 'smtp.hostinger.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'no-reply@seudominio.com';
-        $mail->Password   = 'SENHA_AQUI';
-        $mail->SMTPSecure = 'tls';
-        $mail->Port       = 587;
+        $mail->Username   = $_ENV['EMAIL_USUARIO'];
+        $mail->Password   = $_ENV['EMAIL_SENHA'];
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port       = 465;
+        $mail->CharSet    = 'UTF-8';
 
-        $mail->setFrom('no-reply@seudominio.com', 'MotorGo');
+        $mail->setFrom($_ENV['EMAIL_USUARIO'], 'MotorGo');
         $mail->addAddress($destinatarioEmail, $destinatarioNome);
         $mail->isHTML(true);
         $mail->Subject = "📩 Nova atualização na sua negociação - MotorGo";
