@@ -10,7 +10,18 @@ require_once 'conexao_bd.php';
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+// Verifica se variáveis de ambiente estão disponíveis
+if (!isset($_ENV['EMAIL_USUARIO'], $_ENV['EMAIL_SENHA'])) {
+    error_log("Erro em notificar_email.php: Variáveis de ambiente EMAIL_USUARIO e EMAIL_SENHA não definidas.");
+}
+
 function enviarEmailNotificacao($destinatarioEmail, $destinatarioNome, $tipo, $dados = []) {
+    // Valida que as variáveis de ambiente estão disponíveis
+    if (!isset($_ENV['EMAIL_USUARIO'], $_ENV['EMAIL_SENHA'])) {
+        error_log("Erro ao enviar e-mail de notificação: Variáveis de ambiente não configuradas.");
+        return false;
+    }
+
     $mail = new PHPMailer(true);
 
     try {
@@ -58,6 +69,7 @@ function enviarEmailNotificacao($destinatarioEmail, $destinatarioNome, $tipo, $d
         $mail->send();
         return true;
     } catch (Exception $e) {
+        error_log("Erro ao enviar e-mail de notificação: " . $e->getMessage());
         return false;
     }
 }
