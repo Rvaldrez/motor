@@ -20,7 +20,7 @@ echo "TESTE DE ENVIO ÚNICO\n";
 echo "====================================================\n\n";
 
 // ⚠️ MUDE AQUI PARA SEU EMAIL DE TESTE!
-$emailTeste = "seu_email@dominio.com";  // ⚠️ EDITE ESTA LINHA!
+$emailTeste = "r.robertovj@gmail.com";  // ⚠️ EDITE ESTA LINHA!
 $nomeTeste = "Teste Newsletter";
 
 // Verificar se o email foi alterado
