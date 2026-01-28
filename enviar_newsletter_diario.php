@@ -399,6 +399,10 @@ function enviarEmail($destinatario, $nomeDestinatario, $assunto, $corpoHTML) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port       = 465;
         $mail->CharSet    = 'UTF-8';
+        
+        // Configurações de timeout para evitar travamentos
+        $mail->Timeout    = 30;  // Timeout de 30 segundos
+        $mail->SMTPKeepAlive = false;  // Não manter conexão aberta
 
         $mail->setFrom($_ENV['EMAIL_USUARIO'], 'MotorGo');
         $mail->addAddress($destinatario, $nomeDestinatario);
@@ -489,9 +493,13 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
     
     $sucessos = 0;
     $falhas = 0;
+    $total = count($investidores);
+    $contador = 0;
     
     foreach ($investidores as $investidor) {
-        echo "Enviando para: " . $investidor['email'] . " (" . $investidor['nome'] . ")... ";
+        $contador++;
+        echo "Enviando $contador/$total: " . $investidor['email'] . " (" . $investidor['nome'] . ")... ";
+        flush(); // Força a saída imediata na tela
         
         // Gerar HTML do email
         $htmlEmail = gerarHTMLEmail($veiculos, $investidor['nome']);
@@ -513,6 +521,7 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
             $falhas++;
             $status = 'erro';
         }
+        flush(); // Força a saída imediata na tela
         
         // Registrar no banco
         registrarEnvioEmail(
@@ -525,8 +534,8 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
             null  // Sem mensagem de erro (poderia capturar do PHPMailer)
         );
         
-        // Pausa entre envios para evitar sobrecarga do servidor SMTP
-        sleep(1);
+        // Pausa entre envios para evitar sobrecarga do servidor SMTP (reduzido para 0.5s)
+        usleep(500000); // 0.5 segundos
     }
     
     echo "----------------------------------------------------\n";
