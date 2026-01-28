@@ -539,9 +539,12 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
     }
     
     echo "----------------------------------------------------\n";
-    echo "\nResumo:\n";
+    echo "\n📊 RESUMO DO ENVIO:\n";
     echo "  ✓ Enviados com sucesso: $sucessos\n";
     echo "  ✗ Falhas: $falhas\n";
+    echo "  📧 Total de investidores: $total\n";
+    echo "  🚗 Veículos na newsletter: " . count($veiculos) . "\n";
+    echo "  ⏱️  Tempo estimado: ~" . round($total * 2.5) . " segundos\n";
 } elseif (count($veiculos) == 0) {
     echo "⚠ Nenhum veículo novo para enviar. Newsletter não enviada.\n";
 } elseif (count($investidores) == 0) {
