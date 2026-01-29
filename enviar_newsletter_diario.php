@@ -158,6 +158,52 @@ function buscarVeiculosNovos($mysqli) {
 }
 
 /**
+ * Busca os 4 veículos mais recentes (independente da data)
+ * Exclui IDs já mostrados na seção de "Novos Veículos"
+ */
+function buscarVeiculosRecentes($mysqli, $excluirIds = []) {
+    // Preparar lista de IDs para excluir
+    $whereNotIn = '';
+    if (!empty($excluirIds)) {
+        $ids = implode(',', array_map('intval', $excluirIds));
+        $whereNotIn = "AND v.id NOT IN ($ids)";
+    }
+    
+    $sql = "SELECT 
+                v.id,
+                v.modelo,
+                v.marca,
+                v.ano_fabrica,
+                v.quilometragem,
+                v.preco,
+                u.cidade AS usuario_cidade,
+                u.estado AS usuario_estado,
+                (SELECT caminho_foto 
+                 FROM fotos_veiculos 
+                 WHERE veiculo_id = v.id 
+                 ORDER BY ordem_exibicao ASC, id ASC 
+                 LIMIT 1) AS foto_principal
+            FROM veiculos v
+            LEFT JOIN usuarios u ON v.usuario_id = u.id
+            WHERE v.status = 'completo'
+              AND v.em_negociacao = 0
+              $whereNotIn
+            ORDER BY v.data_cadastro DESC
+            LIMIT 4";
+    
+    $result = $mysqli->query($sql);
+    $veiculos = [];
+    
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $veiculos[] = $row;
+        }
+    }
+    
+    return $veiculos;
+}
+
+/**
  * Busca investidores ativos para receber a newsletter
  */
 function buscarInvestidores($mysqli) {
@@ -182,8 +228,12 @@ function buscarInvestidores($mysqli) {
 
 /**
  * Gera o HTML do email com os veículos
+ * 
+ * @param array $veiculosNovos - Veículos cadastrados nas últimas 24h
+ * @param array $veiculosRecentes - 4 veículos mais recentes (independente da data)
+ * @param string $nomeInvestidor - Nome do investidor
  */
-function gerarHTMLEmail($veiculos, $nomeInvestidor) {
+function gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $nomeInvestidor) {
     ob_start();
     ?>
 <!DOCTYPE html>
@@ -267,6 +317,22 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
             flex-wrap: wrap;
             gap: 20px;
             justify-content: space-between;
+        }
+        
+        /* Título de seção */
+        .section-title {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+            border-left: 5px solid #B22222;
+        }
+        
+        .section-title.secondary {
+            background-color: #333333;
+            margin-top: 20px;
         }
         
         /* Card de veículo */
@@ -407,10 +473,11 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
             <p>Confira os veículos cadastrados nas últimas 24 horas. Faça a sua oferta e garanta a oportunidade de lucrar na revenda!</p>
         </div>
         
-        <!-- Veículos -->
-        <?php if (count($veiculos) > 0): ?>
+        <!-- Veículos das Últimas 24h -->
+        <?php if (count($veiculosNovos) > 0): ?>
+        <h2 class="section-title">🚗 Novos Veículos (Últimas 24 horas)</h2>
         <div class="veiculos-container">
-            <?php foreach ($veiculos as $veiculo): 
+            <?php foreach ($veiculosNovos as $veiculo): 
                 // Usar foto do veículo ou placeholder base64 se não houver foto
                 if (!empty($veiculo['foto_principal'])) {
                     $foto = BASE_URL . '/' . $veiculo['foto_principal'];
@@ -435,9 +502,43 @@ function gerarHTMLEmail($veiculos, $nomeInvestidor) {
             </div>
             <?php endforeach; ?>
         </div>
-        <?php else: ?>
+        <?php endif; ?>
+        
+        <!-- Cadastros Recentes -->
+        <?php if (count($veiculosRecentes) > 0): ?>
+        <h2 class="section-title secondary">📋 Cadastros Recentes</h2>
+        <div class="veiculos-container">
+            <?php foreach ($veiculosRecentes as $veiculo): 
+                // Usar foto do veículo ou placeholder base64 se não houver foto
+                if (!empty($veiculo['foto_principal'])) {
+                    $foto = BASE_URL . '/' . $veiculo['foto_principal'];
+                } else {
+                    // Placeholder SVG inline em base64 - não depende de arquivo externo
+                    $foto = 'data:image/svg+xml;base64,' . base64_encode('<?xml version="1.0" encoding="UTF-8"?><svg width="400" height="300" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="300" fill="#e0e0e0"/><text x="50%" y="50%" font-family="Arial" font-size="24" fill="#666" text-anchor="middle" dominant-baseline="middle">Sem Imagem</text></svg>');
+                }
+                $preco = number_format($veiculo['preco'], 2, ',', '.');
+                $km = number_format($veiculo['quilometragem'], 0, '', '.');
+                $localizacao = trim($veiculo['usuario_cidade'] . '/' . $veiculo['usuario_estado']);
+                if ($localizacao == '/') $localizacao = 'Não informado';
+            ?>
+            <div class="veiculo-card">
+                <img src="<?php echo htmlspecialchars($foto); ?>" alt="<?php echo htmlspecialchars($veiculo['modelo']); ?>">
+                <div class="veiculo-info">
+                    <h3><?php echo htmlspecialchars($veiculo['marca'] . ' ' . $veiculo['modelo']); ?></h3>
+                    <p><strong>Ano de Fabricação:</strong> <?php echo htmlspecialchars($veiculo['ano_fabrica']); ?></p>
+                    <p><strong>Quilometragem:</strong> <?php echo htmlspecialchars($km); ?> km</p>
+                    <p><strong>Localização:</strong> <?php echo htmlspecialchars($localizacao); ?></p>
+                    <a href="<?php echo BASE_URL; ?>/painel_investidor.php" class="btn-cta">Ver detalhes</a>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Mensagem quando não há veículos -->
+        <?php if (count($veiculosNovos) == 0 && count($veiculosRecentes) == 0): ?>
         <div class="sem-veiculos">
-            <p>Nenhum veículo novo disponível hoje. Fique atento às próximas oportunidades!</p>
+            <p>Nenhum veículo disponível no momento. Fique atento às próximas oportunidades!</p>
         </div>
         <?php endif; ?>
         
@@ -554,26 +655,42 @@ echo "====================================================\n\n";
 // Usar conexão do banco já estabelecida em conexao_bd.php
 echo "✓ Conectado ao banco de dados\n\n";
 
-// Buscar veículos novos
-echo "Buscando veículos cadastrados ontem...\n";
-$veiculos = buscarVeiculosNovos($mysqli);
-echo "✓ Encontrados: " . count($veiculos) . " veículo(s)\n\n";
+// Buscar veículos novos (últimas 24h)
+echo "Buscando veículos cadastrados ontem (últimas 24h)...\n";
+$veiculosNovos = buscarVeiculosNovos($mysqli);
+echo "✓ Encontrados: " . count($veiculosNovos) . " veículo(s)\n\n";
 
-if (count($veiculos) > 0) {
-    echo "Veículos encontrados:\n";
-    foreach ($veiculos as $v) {
+if (count($veiculosNovos) > 0) {
+    echo "Veículos novos (24h):\n";
+    foreach ($veiculosNovos as $v) {
         echo "  - " . $v['marca'] . " " . $v['modelo'] . " (" . $v['ano_fabrica'] . ")\n";
     }
     echo "\n";
 }
+
+// Buscar veículos recentes (4 mais recentes, excluindo os já mostrados)
+$idsExcluir = array_column($veiculosNovos, 'id');
+echo "Buscando os 4 cadastros mais recentes...\n";
+$veiculosRecentes = buscarVeiculosRecentes($mysqli, $idsExcluir);
+echo "✓ Encontrados: " . count($veiculosRecentes) . " veículo(s)\n\n";
+
+if (count($veiculosRecentes) > 0) {
+    echo "Cadastros recentes:\n";
+    foreach ($veiculosRecentes as $v) {
+        echo "  - " . $v['marca'] . " " . $v['modelo'] . " (" . $v['ano_fabrica'] . ")\n";
+    }
+    echo "\n";
+}
+
+$totalVeiculos = count($veiculosNovos) + count($veiculosRecentes);
 
 // Buscar investidores
 echo "Buscando investidores ativos...\n";
 $investidores = buscarInvestidores($mysqli);
 echo "✓ Encontrados: " . count($investidores) . " investidor(es)\n\n";
 
-// Enviar emails
-if (count($investidores) > 0 && count($veiculos) > 0) {
+// Enviar emails (enviar se houver pelo menos novos OU recentes)
+if (count($investidores) > 0 && $totalVeiculos > 0) {
     echo "Iniciando envio de emails...\n";
     echo "----------------------------------------------------\n";
     
@@ -587,8 +704,8 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
         echo "Enviando $contador/$total: " . $investidor['email'] . " (" . $investidor['nome'] . ")... ";
         flush(); // Força a saída imediata na tela
         
-        // Gerar HTML do email
-        $htmlEmail = gerarHTMLEmail($veiculos, $investidor['nome']);
+        // Gerar HTML do email com AMBAS as seções
+        $htmlEmail = gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $investidor['nome']);
         
         // Enviar email
         $enviado = enviarEmail(
@@ -616,7 +733,7 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
             $investidor['email'],
             EMAIL_SUBJECT,
             $status,
-            count($veiculos),  // Quantidade de veículos enviados
+            $totalVeiculos,  // Total de veículos enviados (novos + recentes)
             null  // Sem mensagem de erro (poderia capturar do PHPMailer)
         );
         
@@ -629,10 +746,12 @@ if (count($investidores) > 0 && count($veiculos) > 0) {
     echo "  ✓ Enviados com sucesso: $sucessos\n";
     echo "  ✗ Falhas: $falhas\n";
     echo "  📧 Total de investidores: $total\n";
-    echo "  🚗 Veículos na newsletter: " . count($veiculos) . "\n";
+    echo "  🚗 Veículos novos (24h): " . count($veiculosNovos) . "\n";
+    echo "  📋 Cadastros recentes: " . count($veiculosRecentes) . "\n";
+    echo "  📦 Total de veículos: $totalVeiculos\n";
     echo "  ⏱️  Tempo estimado: ~" . round($total * 2.5) . " segundos\n";
-} elseif (count($veiculos) == 0) {
-    echo "⚠ Nenhum veículo novo para enviar. Newsletter não enviada.\n";
+} elseif ($totalVeiculos == 0) {
+    echo "⚠ Nenhum veículo disponível para enviar. Newsletter não enviada.\n";
 } elseif (count($investidores) == 0) {
     echo "⚠ Nenhum investidor ativo encontrado. Newsletter não enviada.\n";
 }
