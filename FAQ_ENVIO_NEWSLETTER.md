@@ -2,51 +2,45 @@
 
 ## Pergunta Principal
 
-**"a newsletter será enviada somente se tiverem veículos cadastrados nas últimas 24h?"**
+**"A newsletter será enviada somente se houver veículos novos cadastrados nas últimas 24h?"**
 
 ## Resposta Direta
 
-**NÃO** ❌
+**SIM** ✅
 
-A newsletter é enviada se houver **QUALQUER veículo disponível**, seja:
-- Veículos das últimas 24 horas (Seção 1), OU
-- Veículos recentes dos dias anteriores (Seção 2), OU
-- Ambos
+A newsletter é enviada **SOMENTE** quando há veículos cadastrados nas últimas 24 horas.
 
 ## Lógica Atual
 
 ### A newsletter É ENVIADA quando:
 
-✅ Há veículos novos das últimas 24h (mesmo sem recentes)  
-✅ Há veículos recentes dos dias anteriores (mesmo sem novos de 24h)  
-✅ Ambas as seções têm veículos  
+✅ Há veículos novos cadastrados nas últimas 24 horas  
+✅ Existem investidores ativos  
 
 ### A newsletter NÃO é enviada quando:
 
-❌ Não há nenhum veículo disponível (total = 0)  
-❌ Não há investidores ativos  
+❌ NÃO há veículos das últimas 24h (mesmo que existam veículos recentes de dias anteriores)  
+❌ NÃO há investidores ativos  
 
 ## Código
 
 **Arquivo**: `enviar_newsletter_diario.php`
 
-**Linha 677** - Cálculo do total:
+**Linha 685** - Condição de envio:
 ```php
-$totalVeiculos = count($veiculosNovos) + count($veiculosRecentes);
-```
-
-**Linha 685** - Decisão de envio:
-```php
-if (count($investidores) > 0 && $totalVeiculos > 0) {
-    // ENVIA a newsletter ✅
+if (count($investidores) > 0 && count($veiculosNovos) > 0) {
+    // ENVIA a newsletter SOMENTE se houver veículos das últimas 24h ✅
     echo "Iniciando envio de emails...\n";
 }
 ```
 
-**Linhas 745-749** - Mensagens quando NÃO envia:
+**Linhas 745-750** - Mensagens quando NÃO envia:
 ```php
-} elseif ($totalVeiculos == 0) {
-    echo "⚠ Nenhum veículo disponível para enviar. Newsletter não enviada.\n";
+} elseif (count($veiculosNovos) == 0) {
+    echo "⚠ Nenhum veículo novo cadastrado nas últimas 24h. Newsletter não enviada.\n";
+    if (count($veiculosRecentes) > 0) {
+        echo "   Há X veículo(s) recente(s), mas newsletter só é enviada com veículos das últimas 24h.\n";
+    }
 } elseif (count($investidores) == 0) {
     echo "⚠ Nenhum investidor ativo encontrado. Newsletter não enviada.\n";
 }
@@ -54,117 +48,103 @@ if (count($investidores) > 0 && $totalVeiculos > 0) {
 
 ## Cenários Detalhados
 
-### Cenário 1: Ambas as seções com veículos
+### Cenário 1: Veículos Novos (24h) + Veículos Recentes
 
 **Banco de dados:**
-- Veículos novos (24h): 3 veículos
-- Cadastros recentes: 4 veículos
-- Total: 7 veículos
+- Veículos das últimas 24h: 3 veículos
+- Veículos recentes (dias anteriores): 4 veículos
 
-**Resultado:** ✅ Newsletter ENVIADA
+**Resultado:**
+- ✅ **Newsletter ENVIADA**
+- Seção 1: 3 veículos (últimas 24h)
+- Seção 2: 4 veículos (dias anteriores)
+- Total mostrado: 7 veículos
 
-**Email mostra:**
-- Seção "Novos Veículos (Últimas 24h)": 3 veículos
-- Seção "Cadastros Recentes": 4 veículos
-
----
-
-### Cenário 2: SEM veículos novos, MAS COM recentes (IMPORTANTE!)
+### Cenário 2: APENAS Veículos Recentes (SEM veículos de 24h)
 
 **Banco de dados:**
-- Veículos novos (24h): 0 veículos
-- Cadastros recentes: 4 veículos
-- Total: 4 veículos
+- Veículos das últimas 24h: 0 veículos
+- Veículos recentes (dias anteriores): 4 veículos
 
-**Resultado:** ✅ Newsletter ENVIADA
+**Resultado:**
+- ❌ **Newsletter NÃO ENVIADA**
+- Mensagem: "⚠ Nenhum veículo novo cadastrado nas últimas 24h. Newsletter não enviada."
+- Mensagem adicional: "Há 4 veículo(s) recente(s), mas newsletter só é enviada com veículos das últimas 24h."
 
-**Email mostra:**
-- Seção "Novos Veículos (Últimas 24h)": (vazia/oculta)
-- Seção "Cadastros Recentes": 4 veículos
-
-**Este é o ponto chave!** Mesmo sem veículos nas últimas 24h, a newsletter é enviada se houver veículos recentes.
-
----
-
-### Cenário 3: COM veículos novos, SEM recentes
+### Cenário 3: Veículos Novos (24h) SEM Veículos Recentes
 
 **Banco de dados:**
-- Veículos novos (24h): 5 veículos
-- Cadastros recentes: 0 veículos
-- Total: 5 veículos
+- Veículos das últimas 24h: 5 veículos
+- Veículos recentes (dias anteriores): 0 veículos
 
-**Resultado:** ✅ Newsletter ENVIADA
+**Resultado:**
+- ✅ **Newsletter ENVIADA**
+- Seção 1: 5 veículos (últimas 24h)
+- Seção 2: (vazia - sem veículos recentes)
+- Total mostrado: 5 veículos
 
-**Email mostra:**
-- Seção "Novos Veículos (Últimas 24h)": 5 veículos
-- Seção "Cadastros Recentes": (vazia/oculta)
-
----
-
-### Cenário 4: Nenhum veículo disponível
+### Cenário 4: Sem Veículos
 
 **Banco de dados:**
-- Veículos novos (24h): 0 veículos
-- Cadastros recentes: 0 veículos
-- Total: 0 veículos
+- Veículos das últimas 24h: 0 veículos
+- Veículos recentes (dias anteriores): 0 veículos
 
-**Resultado:** ❌ Newsletter NÃO ENVIADA
+**Resultado:**
+- ❌ **Newsletter NÃO ENVIADA**
+- Mensagem: "⚠ Nenhum veículo novo cadastrado nas últimas 24h. Newsletter não enviada."
 
-**Mensagem no console:**
-```
-⚠ Nenhum veículo disponível para enviar. Newsletter não enviada.
-```
+## Tabela de Decisão
 
-## Tabela de Decisão Rápida
+| Veículos 24h | Veículos Recentes | Investidores | Newsletter Enviada? |
+|--------------|-------------------|--------------|---------------------|
+| 3 veículos   | 4 veículos        | Sim          | ✅ **SIM**         |
+| 0 veículos   | 4 veículos        | Sim          | ❌ **NÃO**         |
+| 5 veículos   | 0 veículos        | Sim          | ✅ **SIM**         |
+| 0 veículos   | 0 veículos        | Sim          | ❌ **NÃO**         |
+| 3 veículos   | 4 veículos        | Não          | ❌ **NÃO**         |
 
-| Novos (24h) | Recentes | Total | Newsletter? | Seções no Email |
-|-------------|----------|-------|-------------|-----------------|
-| 3 veículos | 4 veículos | 7 | ✅ SIM | Ambas |
-| 0 veículos | 4 veículos | 4 | ✅ SIM | Só Recentes |
-| 5 veículos | 0 veículos | 5 | ✅ SIM | Só Novos |
-| 0 veículos | 0 veículos | 0 | ❌ NÃO | - |
+## Estrutura da Newsletter (quando enviada)
 
-## Benefícios da Abordagem Atual
+Quando a newsletter é enviada, ela sempre mostra duas seções:
 
-### 1. ✅ Sempre Fornece Valor
+### Seção 1 - Novos Veículos (Últimas 24 horas)
+- **Obrigatória**: DEVE ter pelo menos 1 veículo para enviar
+- Mostra TODOS os veículos cadastrados nas últimas 24h
+- Header: 🚗 Novos Veículos (Últimas 24 horas)
+- Layout: 2 colunas (desktop) / 1 coluna (mobile)
 
-Mesmo sem veículos novos de ontem, os investidores ainda veem opções disponíveis dos dias anteriores.
+### Seção 2 - Cadastros Recentes (Dias Anteriores)
+- **Opcional**: Pode estar vazia
+- Mostra até 4 veículos mais recentes de ANTES das últimas 24h
+- Header: 📋 Cadastros Recentes
+- Layout: 2 colunas (desktop) / 1 coluna (mobile)
 
-### 2. ✅ Mantém o Engajamento
+## Benefícios desta Abordagem
 
-Comunicação regular com os investidores, mantendo-os informados sobre o inventário disponível.
-
-### 3. ✅ Flexível e Adaptável
-
-O sistema se adapta a diferentes níveis de inventário:
-- Muitos cadastros novos? Mostra todos + recentes
-- Poucos cadastros novos? Mostra poucos + recentes
-- Nenhum cadastro novo? Mostra só recentes
-
-### 4. ✅ Amigável ao Usuário
-
-Investidores nunca recebem newsletters vazias. Se recebem email, sempre há conteúdo útil.
+1. ✅ **Foco em Novidades**: Garante que a newsletter sempre traz conteúdo realmente novo
+2. ✅ **Evita Spam**: Não envia newsletters sem novidades relevantes
+3. ✅ **Contexto Adicional**: Quando há novidades, mostra também veículos recentes para comparação
+4. ✅ **Clareza**: Investidores sabem que cada newsletter tem conteúdo fresco
 
 ## Resumo Rápido
 
-**Pergunta:** Newsletter só é enviada se houver veículos nas últimas 24h?
+**Requisito Principal:**
+- A newsletter SÓ é enviada se houver veículos das últimas 24h
 
-**Resposta:** NÃO. É enviada se houver QUALQUER veículo (novos OU recentes).
+**Quando Envia:**
+- ✅ Tem veículos de 24h + tem investidores = **ENVIA**
 
-**Requisito Mínimo:** Pelo menos 1 veículo no total (pode ser novo ou recente).
+**Quando NÃO Envia:**
+- ❌ Não tem veículos de 24h (mesmo com recentes) = **NÃO ENVIA**
+- ❌ Não tem investidores = **NÃO ENVIA**
 
-**Lógica:** Newsletter enviada = (Veículos Novos > 0) OU (Veículos Recentes > 0)
-
-**Benefício:** Maximiza o engajamento garantindo comunicação regular e valiosa.
+**Conteúdo da Newsletter:**
+- Seção 1: Veículos das últimas 24h (obrigatório, sem limite)
+- Seção 2: 4 veículos mais recentes de dias anteriores (opcional)
 
 ## Documentação Relacionada
 
-- **ESTRUTURA_NEWSLETTER.md** - Estrutura do email com ambas as seções
-- **IMPLEMENTACAO_DUAS_SECOES.md** - Como as duas seções funcionam
-- **CORRECAO_LOGICA_VEICULOS.md** - Lógica de veículos recentes
-- **enviar_newsletter_diario.php** - Código fonte
-
----
-
-**Última atualização:** 2026-01-29  
-**Sistema:** MotorGo Newsletter Diária
+- `ESTRUTURA_NEWSLETTER.md` - Estrutura completa do email
+- `IMPLEMENTACAO_DUAS_SECOES.md` - Implementação das duas seções
+- `CORRECAO_LOGICA_VEICULOS.md` - Explicação da lógica de veículos recentes
+- `enviar_newsletter_diario.php` - Código fonte principal

@@ -681,8 +681,8 @@ echo "Buscando investidores ativos...\n";
 $investidores = buscarInvestidores($mysqli);
 echo "✓ Encontrados: " . count($investidores) . " investidor(es)\n\n";
 
-// Enviar emails (enviar se houver pelo menos novos OU recentes)
-if (count($investidores) > 0 && $totalVeiculos > 0) {
+// Enviar emails (enviar SOMENTE se houver veículos novos das últimas 24h)
+if (count($investidores) > 0 && count($veiculosNovos) > 0) {
     echo "Iniciando envio de emails...\n";
     echo "----------------------------------------------------\n";
     
@@ -742,8 +742,11 @@ if (count($investidores) > 0 && $totalVeiculos > 0) {
     echo "  📋 Cadastros recentes: " . count($veiculosRecentes) . "\n";
     echo "  📦 Total de veículos: $totalVeiculos\n";
     echo "  ⏱️  Tempo estimado: ~" . round($total * 2.5) . " segundos\n";
-} elseif ($totalVeiculos == 0) {
-    echo "⚠ Nenhum veículo disponível para enviar. Newsletter não enviada.\n";
+} elseif (count($veiculosNovos) == 0) {
+    echo "⚠ Nenhum veículo novo cadastrado nas últimas 24h. Newsletter não enviada.\n";
+    if (count($veiculosRecentes) > 0) {
+        echo "   Há " . count($veiculosRecentes) . " veículo(s) recente(s), mas newsletter só é enviada com veículos das últimas 24h.\n";
+    }
 } elseif (count($investidores) == 0) {
     echo "⚠ Nenhum investidor ativo encontrado. Newsletter não enviada.\n";
 }
