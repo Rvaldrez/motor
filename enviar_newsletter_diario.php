@@ -158,17 +158,10 @@ function buscarVeiculosNovos($mysqli) {
 }
 
 /**
- * Busca os 4 veículos mais recentes (independente da data)
- * Exclui IDs já mostrados na seção de "Novos Veículos"
+ * Busca os 4 veículos mais recentes DOS DIAS ANTERIORES
+ * Exclui veículos cadastrados nas últimas 24 horas (por data, não por ID)
  */
-function buscarVeiculosRecentes($mysqli, $excluirIds = []) {
-    // Preparar lista de IDs para excluir
-    $whereNotIn = '';
-    if (!empty($excluirIds)) {
-        $ids = implode(',', array_map('intval', $excluirIds));
-        $whereNotIn = "AND v.id NOT IN ($ids)";
-    }
-    
+function buscarVeiculosRecentes($mysqli) {
     $sql = "SELECT 
                 v.id,
                 v.modelo,
@@ -187,7 +180,7 @@ function buscarVeiculosRecentes($mysqli, $excluirIds = []) {
             LEFT JOIN usuarios u ON v.usuario_id = u.id
             WHERE v.status = 'completo'
               AND v.em_negociacao = 0
-              $whereNotIn
+              AND DATE(v.data_cadastro) < CURDATE() - INTERVAL 1 DAY
             ORDER BY v.data_cadastro DESC
             LIMIT 4";
     
@@ -668,10 +661,9 @@ if (count($veiculosNovos) > 0) {
     echo "\n";
 }
 
-// Buscar veículos recentes (4 mais recentes, excluindo os já mostrados)
-$idsExcluir = array_column($veiculosNovos, 'id');
-echo "Buscando os 4 cadastros mais recentes...\n";
-$veiculosRecentes = buscarVeiculosRecentes($mysqli, $idsExcluir);
+// Buscar veículos recentes (4 mais recentes DOS DIAS ANTERIORES)
+echo "Buscando os 4 cadastros mais recentes (dias anteriores)...\n";
+$veiculosRecentes = buscarVeiculosRecentes($mysqli);
 echo "✓ Encontrados: " . count($veiculosRecentes) . " veículo(s)\n\n";
 
 if (count($veiculosRecentes) > 0) {

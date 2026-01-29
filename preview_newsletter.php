@@ -34,10 +34,9 @@ echo "Buscando veículos novos (últimas 24h)...\n";
 $veiculosNovos = buscarVeiculosNovos($mysqli);
 echo "✓ Encontrados: " . count($veiculosNovos) . "\n\n";
 
-// Buscar os 4 cadastros mais recentes (excluindo os já mostrados)
-echo "Buscando cadastros recentes...\n";
-$idsExcluir = array_column($veiculosNovos, 'id');
-$veiculosRecentes = buscarVeiculosRecentes($mysqli, $idsExcluir);
+// Buscar os 4 cadastros mais recentes (DOS DIAS ANTERIORES)
+echo "Buscando cadastros recentes (dias anteriores)...\n";
+$veiculosRecentes = buscarVeiculosRecentes($mysqli);
 echo "✓ Encontrados: " . count($veiculosRecentes) . "\n\n";
 
 // Se não houver veículos reais, usar dados de exemplo
