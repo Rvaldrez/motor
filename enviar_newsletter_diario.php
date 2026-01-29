@@ -7,18 +7,87 @@
  * Este script envia diariamente emails aos investidores sobre veículos
  * recém-cadastrados no sistema.
  * 
+ * ⚠️  IMPORTANTE: ESTE SCRIPT DEVE SER EXECUTADO VIA LINHA DE COMANDO (CLI)
+ * ⚠️  NÃO EXECUTE PELO NAVEGADOR/BROWSER!
+ * 
  * REQUISITOS:
  * - PHPMailer instalado via Composer
  * - Arquivo .env com credenciais SMTP
  * - Acesso ao banco de dados MySQL
- * - Tabela emails_automaticos criada
+ * - Tabela newsletter criada
  * 
- * AGENDAMENTO:
- * Execute via CronJob diariamente às 9:00 AM:
+ * USO CORRETO:
+ * ssh usuario@servidor
+ * cd /caminho/para/motor
+ * php enviar_newsletter_diario.php
+ * 
+ * AGENDAMENTO (CronJob):
  * 0 9 * * * /usr/bin/php /caminho/completo/para/enviar_newsletter_diario.php
  * 
  * ============================================================================
  */
+
+// ============================================================================
+// VERIFICAÇÃO: BLOQUEAR EXECUÇÃO VIA BROWSER
+// ============================================================================
+
+// Verifica se está sendo executado via linha de comando (CLI)
+if (php_sapi_name() !== 'cli') {
+    // Não está em CLI = está no browser
+    http_response_code(403);
+    header('Content-Type: text/html; charset=utf-8');
+    die('
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>Erro - Execução não permitida</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 50px; background: #f5f5f5; }
+            .error-box { background: #fff; border-left: 5px solid #d32f2f; padding: 20px; max-width: 600px; margin: 0 auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            h1 { color: #d32f2f; margin-top: 0; }
+            code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+            .correct { background: #e8f5e9; border-left-color: #4caf50; padding: 15px; margin: 15px 0; }
+            .correct h3 { color: #4caf50; margin-top: 0; }
+        </style>
+    </head>
+    <body>
+        <div class="error-box">
+            <h1>⛔ ERRO: Execução não permitida via navegador!</h1>
+            <p><strong>Este script deve ser executado via linha de comando (CLI), NÃO pelo navegador.</strong></p>
+            
+            <h3>Por que não funciona no navegador?</h3>
+            <ul>
+                <li>⏱️ Timeout do PHP/Browser (30-60 segundos)</li>
+                <li>📧 Enviar 42 emails leva ~60-90 segundos</li>
+                <li>🔌 Conexão do navegador expira</li>
+                <li>💾 Limitações de memória e recursos</li>
+            </ul>
+            
+            <div class="correct">
+                <h3>✅ Forma CORRETA de executar:</h3>
+                <p>Conecte via SSH ao servidor e execute:</p>
+                <pre><code>ssh usuario@servidor
+cd /caminho/para/motor
+php enviar_newsletter_diario.php</code></pre>
+            </div>
+            
+            <h3>📖 Documentação:</h3>
+            <p>Leia o arquivo <code>IMPORTANTE_NAO_USAR_BROWSER.md</code> para mais detalhes.</p>
+        </div>
+    </body>
+    </html>
+    ');
+}
+
+// ============================================================================
+// CONFIGURAÇÕES DE TEMPO PARA CLI
+// ============================================================================
+
+// Remove limite de tempo de execução (só funciona em CLI)
+set_time_limit(0);
+ini_set('max_execution_time', '0');
+ini_set('memory_limit', '256M');
 
 // ============================================================================
 // CARREGAR DEPENDÊNCIAS
@@ -400,9 +469,21 @@ function enviarEmail($destinatario, $nomeDestinatario, $assunto, $corpoHTML) {
         $mail->Port       = 465;
         $mail->CharSet    = 'UTF-8';
         
-        // Configurações de timeout para evitar travamentos
-        $mail->Timeout    = 30;  // Timeout de 30 segundos
-        $mail->SMTPKeepAlive = false;  // Não manter conexão aberta
+        // Configurações de timeout AUMENTADAS para evitar travamentos
+        $mail->Timeout    = 60;  // Timeout de 60 segundos (aumentado de 30)
+        $mail->SMTPKeepAlive = false;  // Não manter conexão aberta entre emails
+        
+        // Debug desabilitado (remover para troubleshooting)
+        $mail->SMTPDebug = 0;
+        
+        // Opções adicionais de timeout
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
 
         $mail->setFrom($_ENV['EMAIL_USUARIO'], 'MotorGo');
         $mail->addAddress($destinatario, $nomeDestinatario);
@@ -412,12 +493,17 @@ function enviarEmail($destinatario, $nomeDestinatario, $assunto, $corpoHTML) {
 
         return $mail->send();
     } catch (Exception $e) {
-        // Log de erros
+        // Log de erros detalhado
         $logDir = __DIR__ . '/logs';
         if (!is_dir($logDir)) {
             mkdir($logDir, 0777, true);
         }
-        file_put_contents($logDir . '/email_erros.log', date('Y-m-d H:i:s') . " - Erro ao enviar e-mail para $destinatario: " . $e->getMessage() . "\n", FILE_APPEND);
+        $errorMsg = date('Y-m-d H:i:s') . " - Erro ao enviar e-mail para $destinatario: " . $e->getMessage() . "\n";
+        file_put_contents($logDir . '/email_erros.log', $errorMsg, FILE_APPEND);
+        
+        // Também exibir erro no CLI para diagnóstico imediato
+        error_log($errorMsg);
+        
         return false;
     }
 }
