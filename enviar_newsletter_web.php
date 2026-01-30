@@ -576,6 +576,81 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
             animation: spin 0.8s linear infinite;
             margin-right: 10px;
         }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            margin-right: 15px;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(108, 117, 125, 0.4);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 0;
+            width: 95%;
+            max-width: 1200px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .close {
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+        
+        .close:hover {
+            color: #B22222;
+            transform: scale(1.1);
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .preview-frame {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            min-height: 500px;
+        }
     </style>
 </head>
 <body>
@@ -843,6 +918,9 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                 
                 <div style="text-align: center; margin-top: 30px;">
                     <?php if (count($veiculosNovos) > 0 && count($investidores) > 0): ?>
+                    <button class="btn btn-secondary" onclick="mostrarPreview()">
+                        👁️ Visualizar Preview do Email
+                    </button>
                     <button class="btn btn-primary" onclick="iniciarEnvio()" id="btnEnviar">
                         🚀 Enviar Newsletter Agora
                     </button>
@@ -850,6 +928,9 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                         Ao clicar, a newsletter será enviada para <?php echo count($investidores); ?> investidor(es)
                     </p>
                     <?php else: ?>
+                    <button class="btn btn-secondary" onclick="mostrarPreview()" <?php echo count($veiculosNovos) == 0 ? 'disabled' : ''; ?>>
+                        👁️ Visualizar Preview do Email
+                    </button>
                     <button class="btn btn-primary" disabled>
                         🚀 Enviar Newsletter Agora
                     </button>
@@ -863,6 +944,27 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                     <?php endif; ?>
                 </div>
                 
+                <!-- Modal de Preview -->
+                <div id="previewModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>👁️ Preview da Newsletter</h2>
+                            <span class="close" onclick="fecharPreview()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <p style="color: #666; margin-bottom: 20px;">
+                                Esta é uma prévia de como o email aparecerá para os investidores.
+                                O nome "Investidor Exemplo" será substituído pelo nome real de cada destinatário.
+                            </p>
+                            <div class="preview-frame" id="previewContent">
+                                <?php if (count($veiculosNovos) > 0): ?>
+                                <?php echo gerarHTMLEmail($veiculosNovos, $veiculosRecentes, 'Investidor Exemplo'); ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <script>
                     function iniciarEnvio() {
                         if (confirm('Confirma o envio da newsletter para <?php echo count($investidores); ?> investidor(es)?')) {
@@ -871,6 +973,31 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                             window.location.href = '?acao=enviar';
                         }
                     }
+                    
+                    function mostrarPreview() {
+                        document.getElementById('previewModal').style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    }
+                    
+                    function fecharPreview() {
+                        document.getElementById('previewModal').style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                    }
+                    
+                    // Fechar modal ao clicar fora
+                    window.onclick = function(event) {
+                        const modal = document.getElementById('previewModal');
+                        if (event.target == modal) {
+                            fecharPreview();
+                        }
+                    }
+                    
+                    // Fechar modal com ESC
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape') {
+                            fecharPreview();
+                        }
+                    });
                 </script>
                 <?php
             endif;
