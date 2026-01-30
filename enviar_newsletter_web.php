@@ -58,8 +58,8 @@ function buscarVeiculosNovos($mysqli) {
             (SELECT caminho_foto 
              FROM fotos_veiculos 
              WHERE veiculo_id = v.id 
-             AND foto_principal = 1 
-             LIMIT 1) as foto_principal
+             ORDER BY ordem_exibicao ASC, id ASC 
+             LIMIT 1) AS foto_principal
         FROM veiculos v
         LEFT JOIN usuarios u ON v.usuario_id = u.id
         WHERE DATE(v.data_cadastro) = '$ontem'
@@ -94,8 +94,8 @@ function buscarVeiculosRecentes($mysqli) {
             (SELECT caminho_foto 
              FROM fotos_veiculos 
              WHERE veiculo_id = v.id 
-             AND foto_principal = 1 
-             LIMIT 1) as foto_principal
+             ORDER BY ordem_exibicao ASC, id ASC 
+             LIMIT 1) AS foto_principal
         FROM veiculos v
         LEFT JOIN usuarios u ON v.usuario_id = u.id
         WHERE v.status = 'completo'
