@@ -739,7 +739,7 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                 echo "<script>addLog('\\n🔍 Buscando veículos cadastrados ontem...', 'info');</script>";
                 flush();
                 
-                $veiculosNovos = buscarVeiculosNovos($conn);
+                $veiculosNovos = buscarVeiculosNovos($mysqli);
                 echo "<script>addLog('✓ Encontrados: " . count($veiculosNovos) . " veículo(s) das últimas 24h', 'success');</script>";
                 flush();
                 
@@ -753,7 +753,7 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                 echo "<script>addLog('\\n🔍 Buscando cadastros recentes...', 'info');</script>";
                 flush();
                 
-                $veiculosRecentes = buscarVeiculosRecentes($conn);
+                $veiculosRecentes = buscarVeiculosRecentes($mysqli);
                 echo "<script>addLog('✓ Encontrados: " . count($veiculosRecentes) . " veículo(s) recentes', 'success');</script>";
                 flush();
                 
@@ -772,7 +772,7 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                 echo "<script>addLog('\\n🔍 Buscando investidores ativos...', 'info');</script>";
                 flush();
                 
-                $investidores = buscarInvestidores($conn);
+                $investidores = buscarInvestidores($mysqli);
                 echo "<script>addLog('✓ Encontrados: " . count($investidores) . " investidor(es)', 'success');</script>";
                 flush();
                 
@@ -824,7 +824,7 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                     
                     // Registra no banco
                     registrarEnvioEmail(
-                        $conn,
+                        $mysqli,
                         $investidor['id'],
                         $investidor['email'],
                         EMAIL_SUBJECT,
@@ -861,9 +861,9 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                 // Modo de visualização - mostra informações e botão
                 
                 // Busca informações
-                $veiculosNovos = buscarVeiculosNovos($conn);
-                $veiculosRecentes = buscarVeiculosRecentes($conn);
-                $investidores = buscarInvestidores($conn);
+                $veiculosNovos = buscarVeiculosNovos($mysqli);
+                $veiculosRecentes = buscarVeiculosRecentes($mysqli);
+                $investidores = buscarInvestidores($mysqli);
                 $totalVeiculos = count($veiculosNovos) + count($veiculosRecentes);
                 
                 ?>
