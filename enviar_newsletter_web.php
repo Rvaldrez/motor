@@ -52,8 +52,8 @@ function buscarVeiculosNovos($mysqli) {
             v.modelo,
             v.ano_fabrica,
             v.quilometragem,
-            v.cidade,
-            v.estado,
+            u.cidade AS usuario_cidade,
+            u.estado AS usuario_estado,
             v.data_cadastro,
             (SELECT caminho_foto 
              FROM fotos_veiculos 
@@ -61,6 +61,7 @@ function buscarVeiculosNovos($mysqli) {
              AND foto_principal = 1 
              LIMIT 1) as foto_principal
         FROM veiculos v
+        LEFT JOIN usuarios u ON v.usuario_id = u.id
         WHERE DATE(v.data_cadastro) = '$ontem'
           AND v.status = 'completo'
           AND v.em_negociacao = 0
@@ -87,8 +88,8 @@ function buscarVeiculosRecentes($mysqli) {
             v.modelo,
             v.ano_fabrica,
             v.quilometragem,
-            v.cidade,
-            v.estado,
+            u.cidade AS usuario_cidade,
+            u.estado AS usuario_estado,
             v.data_cadastro,
             (SELECT caminho_foto 
              FROM fotos_veiculos 
@@ -96,6 +97,7 @@ function buscarVeiculosRecentes($mysqli) {
              AND foto_principal = 1 
              LIMIT 1) as foto_principal
         FROM veiculos v
+        LEFT JOIN usuarios u ON v.usuario_id = u.id
         WHERE v.status = 'completo'
           AND v.em_negociacao = 0
           AND DATE(v.data_cadastro) < CURDATE() - INTERVAL 1 DAY
@@ -210,7 +212,7 @@ function gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $nomeInvestidor) {
                                                         <p style="color: #666; margin: 5px 0; font-size: 14px;">
                                                             <strong>Ano:</strong> <?php echo $veiculo['ano_fabrica']; ?><br>
                                                             <strong>KM:</strong> <?php echo number_format($veiculo['quilometragem'], 0, ',', '.'); ?><br>
-                                                            <strong>Local:</strong> <?php echo htmlspecialchars($veiculo['cidade'] . '/' . $veiculo['estado']); ?>
+                                                            <strong>Local:</strong> <?php echo htmlspecialchars($veiculo['usuario_cidade'] . '/' . $veiculo['usuario_estado']); ?>
                                                         </p>
                                                         <a href="<?php echo $veiculoUrl; ?>" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #B22222; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 14px;">
                                                             Ver detalhes
@@ -264,7 +266,7 @@ function gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $nomeInvestidor) {
                                                         <p style="color: #666; margin: 5px 0; font-size: 14px;">
                                                             <strong>Ano:</strong> <?php echo $veiculo['ano_fabrica']; ?><br>
                                                             <strong>KM:</strong> <?php echo number_format($veiculo['quilometragem'], 0, ',', '.'); ?><br>
-                                                            <strong>Local:</strong> <?php echo htmlspecialchars($veiculo['cidade'] . '/' . $veiculo['estado']); ?>
+                                                            <strong>Local:</strong> <?php echo htmlspecialchars($veiculo['usuario_cidade'] . '/' . $veiculo['usuario_estado']); ?>
                                                         </p>
                                                         <a href="<?php echo $veiculoUrl; ?>" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #B22222; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 14px;">
                                                             Ver detalhes
@@ -909,7 +911,7 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                             <?php echo htmlspecialchars($veiculo['marca'] . ' ' . $veiculo['modelo']); ?>
                         </span>
                         <span class="info-value">
-                            <?php echo $veiculo['ano_fabrica']; ?> | <?php echo htmlspecialchars($veiculo['cidade']); ?>
+                            <?php echo $veiculo['ano_fabrica']; ?> | <?php echo htmlspecialchars($veiculo['usuario_cidade']); ?>
                         </span>
                     </div>
                     <?php endforeach; ?>
