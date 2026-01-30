@@ -563,8 +563,8 @@ function enviarEmail($destinatario, $nomeDestinatario, $assunto, $corpoHTML) {
         $mail->Port       = 465;
         $mail->CharSet    = 'UTF-8';
         
-        // Configurações de timeout AUMENTADAS para evitar travamentos
-        $mail->Timeout    = 60;  // Timeout de 60 segundos (aumentado de 30)
+        // Configurações de timeout - REDUZIDO para falhar mais rápido
+        $mail->Timeout    = 15;  // Timeout de 15 segundos (reduzido de 60)
         $mail->SMTPKeepAlive = false;  // Não manter conexão aberta entre emails
         
         // Debug desabilitado (remover para troubleshooting)
@@ -587,16 +587,19 @@ function enviarEmail($destinatario, $nomeDestinatario, $assunto, $corpoHTML) {
 
         return $mail->send();
     } catch (Exception $e) {
-        // Log de erros detalhado
+        // Exibir erro imediatamente no CLI (para diagnóstico)
+        echo "\n";
+        echo "   ❌ ERRO SMTP: " . $e->getMessage() . "\n";
+        echo "   💡 Verifique credenciais EMAIL_USUARIO e EMAIL_SENHA no arquivo .env\n";
+        echo "   💡 Execute: php teste_smtp_diagnostico.php para diagnóstico completo\n";
+        
+        // Log de erros detalhado em arquivo
         $logDir = __DIR__ . '/logs';
         if (!is_dir($logDir)) {
             mkdir($logDir, 0777, true);
         }
         $errorMsg = date('Y-m-d H:i:s') . " - Erro ao enviar e-mail para $destinatario: " . $e->getMessage() . "\n";
         file_put_contents($logDir . '/email_erros.log', $errorMsg, FILE_APPEND);
-        
-        // Também exibir erro no CLI para diagnóstico imediato
-        error_log($errorMsg);
         
         return false;
     }
