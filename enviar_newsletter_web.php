@@ -50,7 +50,7 @@ function buscarVeiculosNovos($mysqli) {
             v.id,
             v.marca,
             v.modelo,
-            v.ano_fabricacao,
+            v.ano_fabrica,
             v.quilometragem,
             v.cidade,
             v.estado,
@@ -85,7 +85,7 @@ function buscarVeiculosRecentes($mysqli) {
             v.id,
             v.marca,
             v.modelo,
-            v.ano_fabricacao,
+            v.ano_fabrica,
             v.quilometragem,
             v.cidade,
             v.estado,
@@ -208,7 +208,7 @@ function gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $nomeInvestidor) {
                                                             <?php echo htmlspecialchars($veiculo['marca'] . ' ' . $veiculo['modelo']); ?>
                                                         </h3>
                                                         <p style="color: #666; margin: 5px 0; font-size: 14px;">
-                                                            <strong>Ano:</strong> <?php echo $veiculo['ano_fabricacao']; ?><br>
+                                                            <strong>Ano:</strong> <?php echo $veiculo['ano_fabrica']; ?><br>
                                                             <strong>KM:</strong> <?php echo number_format($veiculo['quilometragem'], 0, ',', '.'); ?><br>
                                                             <strong>Local:</strong> <?php echo htmlspecialchars($veiculo['cidade'] . '/' . $veiculo['estado']); ?>
                                                         </p>
@@ -262,7 +262,7 @@ function gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $nomeInvestidor) {
                                                             <?php echo htmlspecialchars($veiculo['marca'] . ' ' . $veiculo['modelo']); ?>
                                                         </h3>
                                                         <p style="color: #666; margin: 5px 0; font-size: 14px;">
-                                                            <strong>Ano:</strong> <?php echo $veiculo['ano_fabricacao']; ?><br>
+                                                            <strong>Ano:</strong> <?php echo $veiculo['ano_fabrica']; ?><br>
                                                             <strong>KM:</strong> <?php echo number_format($veiculo['quilometragem'], 0, ',', '.'); ?><br>
                                                             <strong>Local:</strong> <?php echo htmlspecialchars($veiculo['cidade'] . '/' . $veiculo['estado']); ?>
                                                         </p>
@@ -745,7 +745,7 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                 
                 if (count($veiculosNovos) > 0) {
                     foreach ($veiculosNovos as $v) {
-                        echo "<script>addLog('  - " . addslashes($v['marca'] . ' ' . $v['modelo'] . ' (' . $v['ano_fabricacao'] . ')') . "', 'info');</script>";
+                        echo "<script>addLog('  - " . addslashes($v['marca'] . ' ' . $v['modelo'] . ' (' . $v['ano_fabrica'] . ')') . "', 'info');</script>";
                         flush();
                     }
                 }
@@ -909,7 +909,7 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                             <?php echo htmlspecialchars($veiculo['marca'] . ' ' . $veiculo['modelo']); ?>
                         </span>
                         <span class="info-value">
-                            <?php echo $veiculo['ano_fabricacao']; ?> | <?php echo htmlspecialchars($veiculo['cidade']); ?>
+                            <?php echo $veiculo['ano_fabrica']; ?> | <?php echo htmlspecialchars($veiculo['cidade']); ?>
                         </span>
                     </div>
                     <?php endforeach; ?>
