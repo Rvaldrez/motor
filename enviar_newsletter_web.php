@@ -195,7 +195,7 @@ function gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $nomeInvestidor) {
                                         foreach ($veiculosNovos as $veiculo): 
                                             $contador++;
                                             $fotoUrl = !empty($veiculo['foto_principal']) ? $baseUrl . '/' . $veiculo['foto_principal'] : $baseUrl . '/imagens/sem-foto.jpg';
-                                            $veiculoUrl = $baseUrl . '/secao_oferta_veiculos.php';
+                                            $veiculoUrl = $baseUrl . '/login.php?redirect=ofertas';
                                         ?>
                                         <td style="width: 48%; padding: 10px; vertical-align: top;" align="center">
                                             <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
@@ -249,7 +249,7 @@ function gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $nomeInvestidor) {
                                         foreach ($veiculosRecentes as $veiculo): 
                                             $contador++;
                                             $fotoUrl = !empty($veiculo['foto_principal']) ? $baseUrl . '/' . $veiculo['foto_principal'] : $baseUrl . '/imagens/sem-foto.jpg';
-                                            $veiculoUrl = $baseUrl . '/secao_oferta_veiculos.php';
+                                            $veiculoUrl = $baseUrl . '/login.php?redirect=ofertas';
                                         ?>
                                         <td style="width: 48%; padding: 10px; vertical-align: top;" align="center">
                                             <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
