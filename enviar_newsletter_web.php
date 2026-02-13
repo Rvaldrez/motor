@@ -28,6 +28,17 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/conexao_bd.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
+
+// Função para verificar e reconectar MySQL se necessário
+function verificarConexaoMySQL(&$mysqli) {
+    if (!$mysqli->ping()) {
+        // Conexão perdida, reconectar
+        $mysqli->close();
+        require __DIR__ . '/conexao_bd.php';
+        return true; // Reconectado
+    }
+    return false; // Já estava conectado
+}
 use PHPMailer\PHPMailer\Exception;
 
 // Carrega variáveis de ambiente
@@ -338,6 +349,12 @@ function enviarEmail($paraEmail, $paraNome, $assunto, $htmlCorpo) {
 }
 
 function registrarEnvioEmail($mysqli, $usuarioId, $email, $assunto, $status, $veiculosEnviados, $erroMensagem = null) {
+    // Verificar conexão antes de usar
+    if (!$mysqli->ping()) {
+        $mysqli->close();
+        require __DIR__ . '/conexao_bd.php';
+    }
+    
     $stmt = $mysqli->prepare("
         INSERT INTO newsletter (usuario_id, email, assunto, status, veiculos_enviados, erro_mensagem)
         VALUES (?, ?, ?, ?, ?, ?)
@@ -823,6 +840,9 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                         $status = 'falha';
                         $erroMsg = 'Erro SMTP';
                     }
+                    
+                    // Verificar conexão MySQL antes de registrar
+                    verificarConexaoMySQL($mysqli);
                     
                     // Registra no banco
                     registrarEnvioEmail(
