@@ -326,7 +326,7 @@ function enviarEmail($paraEmail, $paraNome, $assunto, $htmlCorpo) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port       = 465;
         $mail->CharSet    = 'UTF-8';
-        $mail->Timeout    = 15;
+        $mail->Timeout    = 30; // Aumentado para evitar timeout
         
         $mail->SMTPOptions = array(
             'ssl' => array(
@@ -344,6 +344,8 @@ function enviarEmail($paraEmail, $paraNome, $assunto, $htmlCorpo) {
 
         return $mail->send();
     } catch (Exception $e) {
+        // Logar erro detalhado
+        error_log("SMTP Error para $paraEmail: " . $e->getMessage());
         return false;
     }
 }
@@ -821,24 +823,42 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                     // Gera HTML do email
                     $htmlEmail = gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $investidor['nome']);
                     
-                    // Envia email
-                    $enviado = enviarEmail(
-                        $investidor['email'],
-                        $investidor['nome'],
-                        EMAIL_SUBJECT,
-                        $htmlEmail
-                    );
+                    // Envia email com retry
+                    $tentativas = 0;
+                    $maxTentativas = 2;
+                    $enviado = false;
+                    
+                    while ($tentativas < $maxTentativas && !$enviado) {
+                        $tentativas++;
+                        if ($tentativas > 1) {
+                            echo "<script>addLog('  🔄 Tentativa " . $tentativas . "...', 'warning');</script>";
+                            flush();
+                            sleep(2); // Aguarda 2s antes de retentar
+                        }
+                        
+                        $enviado = enviarEmail(
+                            $investidor['email'],
+                            $investidor['nome'],
+                            EMAIL_SUBJECT,
+                            $htmlEmail
+                        );
+                    }
                     
                     if ($enviado) {
                         $sucessos++;
-                        echo "<script>addLog('  ✓ Enviado com sucesso!', 'success');</script>";
+                        echo "<script>addLog('  ✓ Enviado com sucesso!" . ($tentativas > 1 ? " (tentativa $tentativas)" : "") . "', 'success');</script>";
                         $status = 'enviado';
                         $erroMsg = null;
                     } else {
                         $falhas++;
-                        echo "<script>addLog('  ✗ Falha no envio', 'error');</script>";
+                        echo "<script>addLog('  ✗ Falha no envio após " . $maxTentativas . " tentativas', 'error');</script>";
                         $status = 'falha';
-                        $erroMsg = 'Erro SMTP';
+                        $erroMsg = 'Erro SMTP após ' . $maxTentativas . ' tentativas';
+                    }
+                    
+                    // Keepalive - evita timeout do navegador
+                    if ($contador % 5 == 0) {
+                        echo "<!-- keepalive at $contador -->\n";
                     }
                     
                     // Verificar conexão MySQL antes de registrar
