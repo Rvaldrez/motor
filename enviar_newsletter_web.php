@@ -31,9 +31,16 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 // Função para verificar e reconectar MySQL se necessário
 function verificarConexaoMySQL(&$mysqli) {
-    if (!$mysqli->ping()) {
-        // Conexão perdida, reconectar
-        $mysqli->close();
+    try {
+        if (!$mysqli->ping()) {
+            // Conexão perdida, reconectar
+            @$mysqli->close();
+            require __DIR__ . '/conexao_bd.php';
+            return true; // Reconectado
+        }
+    } catch (mysqli_sql_exception $e) {
+        // Conexão completamente morta, reconectar
+        @$mysqli->close();
         require __DIR__ . '/conexao_bd.php';
         return true; // Reconectado
     }
