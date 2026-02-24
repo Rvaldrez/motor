@@ -19,6 +19,16 @@ ob_implicit_flush(true);
 set_time_limit(0);
 ini_set('max_execution_time', 0);
 
+// Handler para capturar erros fatais
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        echo "<script>addLog('❌ ERRO FATAL: " . addslashes($error['message']) . " em " . addslashes($error['file']) . " linha " . $error['line'] . "', 'error');</script>";
+        flush();
+        error_log("FATAL ERROR na newsletter: " . json_encode($error));
+    }
+});
+
 // Headers para streaming
 header('Content-Type: text/html; charset=UTF-8');
 header('X-Accel-Buffering: no');
@@ -820,12 +830,17 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                 $falhas = 0;
                 $total = count($investidores);
                 
-                foreach ($investidores as $investidor) {
-                    $contador++;
+                // Try-catch ao redor do loop para capturar erros
+                try {
+                    foreach ($investidores as $investidor) {
+                        $contador++;
                     
                     echo "<script>addLog('Enviando " . $contador . "/" . $total . ": " . addslashes($investidor['email']) . " (" . addslashes($investidor['nome']) . ")...', 'info');</script>";
                     echo "<script>updateProgress(" . $contador . ", " . $total . ");</script>";
                     flush();
+                    
+                    // Log em arquivo para debugging
+                    error_log("Newsletter: Processando $contador/$total - " . $investidor['email']);
                     
                     // Gera HTML do email
                     $htmlEmail = gerarHTMLEmail($veiculosNovos, $veiculosRecentes, $investidor['nome']);
@@ -863,9 +878,11 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                         $erroMsg = 'Erro SMTP após ' . $maxTentativas . ' tentativas';
                     }
                     
-                    // Keepalive - evita timeout do navegador
-                    if ($contador % 5 == 0) {
-                        echo "<!-- keepalive at $contador -->\n";
+                    // Keepalive mais agressivo - evita timeout do navegador
+                    if ($contador % 3 == 0) {
+                        echo "<!-- keepalive at $contador of $total (" . round(($contador/$total)*100) . "%) -->\n";
+                        flush();
+                        ob_flush();
                     }
                     
                     // Verificar conexão MySQL antes de registrar
@@ -882,8 +899,22 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
                         $erroMsg
                     );
                     
+                    // Liberar memória
+                    unset($htmlEmail);
+                    if (function_exists('gc_collect_cycles')) {
+                        gc_collect_cycles();
+                    }
+                    
                     flush();
                     usleep(300000); // 0.3 segundo entre emails
+                }
+                
+                } catch (Exception $e) {
+                    // Capturar erro e continuar
+                    echo "<script>addLog('❌ ERRO CRÍTICO no loop: " . addslashes($e->getMessage()) . "', 'error');</script>";
+                    echo "<script>addLog('Processados: $contador de $total emails', 'warning');</script>";
+                    flush();
+                    error_log("Erro no loop de envio: " . $e->getMessage());
                 }
                 
                 $tempoFim = microtime(true);
