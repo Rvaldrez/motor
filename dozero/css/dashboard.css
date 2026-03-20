@@ -133,7 +133,8 @@
   background: rgba(178, 34, 34, 0.22);
   color: #fff;
   font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--color-primary);
+  border-left: 3px solid var(--color-primary);
+  padding-left: calc(0.875rem - 3px);
 }
 
 .sidebar-nav-link.active .nav-icon {
@@ -486,7 +487,8 @@
 }
 
 .sidebar.collapsed .sidebar-nav-link.active {
-  box-shadow: inset 3px 0 0 var(--color-primary);
+  border-left: 3px solid var(--color-primary);
+  padding-left: calc(0.7rem - 3px);
 }
 
 .layout-main.sidebar-collapsed {

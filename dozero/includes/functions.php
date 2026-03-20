@@ -121,13 +121,13 @@ function generateToken(int $length = 32): string
 }
 
 /**
- * Gera código numérico aleatório (ex: para SMS/e-mail).
+ * Gera código numérico aleatório com zero-padding (ex: para SMS/e-mail).
+ * Permite códigos com zeros à esquerda: '007341', '000189', etc.
  */
 function generateCode(int $length = 6): string
 {
-    $min = (int) str_pad('1', $length, '0');
     $max = (int) str_repeat('9', $length);
-    return str_pad((string) random_int($min, $max), $length, '0', STR_PAD_LEFT);
+    return str_pad((string) random_int(0, $max), $length, '0', STR_PAD_LEFT);
 }
 
 // ── E-mail ────────────────────────────────────────────────────
