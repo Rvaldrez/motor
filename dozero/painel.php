@@ -20,9 +20,7 @@ if (!in_array($activeSection, $allowedSections, true)) {
 }
 
 // ── Section access control ───────────────────────────────────
-if ($activeSection === 'veiculos' && $tipo === 'investidor') {
-    $activeSection = 'painel';
-}
+// Oferta section is only for investidor and administrador
 if ($activeSection === 'oferta' && $tipo === 'vendedor') {
     $activeSection = 'painel';
 }
@@ -31,7 +29,7 @@ if ($activeSection === 'oferta' && $tipo === 'vendedor') {
 $badgeVeiculos    = 0;
 $badgePropostas   = 0;
 
-if ($tipo === 'vendedor') {
+if ($tipo === 'vendedor' || $tipo === 'investidor') {
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
@@ -45,20 +43,6 @@ if ($tipo === 'vendedor') {
 
     $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE usuario_id = ?");
     $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($badgeVeiculos);
-    $stmt->fetch();
-    $stmt->close();
-
-} elseif ($tipo === 'investidor') {
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status = 'aguardando' AND proposta_origem_id IS NULL");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($badgePropostas);
-    $stmt->fetch();
-    $stmt->close();
-
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE status = 'disponivel'");
     $stmt->execute();
     $stmt->bind_result($badgeVeiculos);
     $stmt->fetch();
@@ -83,7 +67,7 @@ $sectionTitles = [
     'painel'    => 'Painel',
     'veiculos'  => $tipo === 'administrador' ? 'Todos os Veículos' : 'Meus Veículos',
     'oferta'    => 'Oferta de Veículos',
-    'propostas' => $tipo === 'vendedor' ? 'Propostas Recebidas' : ($tipo === 'investidor' ? 'Minhas Propostas' : 'Todas as Propostas'),
+    'propostas' => $tipo === 'administrador' ? 'Todas as Propostas' : 'Propostas',
     'dados'     => 'Meus Dados',
     'ajuda'     => 'Ajuda & Suporte',
 ];
@@ -718,7 +702,7 @@ $flash = getFlashMessage();
                     </a>
                 </li>
 
-                <?php if ($tipo === 'vendedor' || $tipo === 'administrador'): ?>
+                <?php if ($tipo === 'vendedor' || $tipo === 'investidor' || $tipo === 'administrador'): ?>
                 <li>
                     <a class="sidebar-nav-link <?= $activeSection === 'veiculos' ? 'active' : '' ?>"
                        href="painel.php?secao=veiculos" data-section="veiculos">
@@ -749,7 +733,7 @@ $flash = getFlashMessage();
                        href="painel.php?secao=propostas" data-section="propostas">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                         <span>
-                            <?= $tipo === 'vendedor' ? 'Propostas Recebidas' : ($tipo === 'investidor' ? 'Minhas Propostas' : 'Todas as Propostas') ?>
+                            <?= $tipo === 'administrador' ? 'Todas as Propostas' : 'Propostas' ?>
                         </span>
                         <?php if ($badgePropostas > 0): ?>
                         <span class="sidebar-badge"><?= (int)$badgePropostas ?></span>
@@ -853,7 +837,7 @@ $flash = getFlashMessage();
             <?php include __DIR__ . '/includes/secao_painel.php'; ?>
 
             <!-- Veiculos section -->
-            <?php elseif ($activeSection === 'veiculos' && ($tipo === 'vendedor' || $tipo === 'administrador')): ?>
+            <?php elseif ($activeSection === 'veiculos' && ($tipo === 'vendedor' || $tipo === 'investidor' || $tipo === 'administrador')): ?>
             <?php include __DIR__ . '/includes/secao_veiculos.php'; ?>
 
             <!-- Oferta section -->

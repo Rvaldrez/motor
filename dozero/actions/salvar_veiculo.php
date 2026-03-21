@@ -10,8 +10,8 @@ if (!isLoggedIn()) {
     echo json_encode(['success' => false, 'message' => 'Acesso negado.']);
     exit;
 }
-if (($_SESSION['tipo'] ?? '') !== 'vendedor' && ($_SESSION['tipo'] ?? '') !== 'administrador') {
-    echo json_encode(['success' => false, 'message' => 'Apenas vendedores podem cadastrar veículos.']);
+if (($_SESSION['tipo'] ?? '') !== 'vendedor' && ($_SESSION['tipo'] ?? '') !== 'investidor' && ($_SESSION['tipo'] ?? '') !== 'administrador') {
+    echo json_encode(['success' => false, 'message' => 'Acesso não permitido.']);
     exit;
 }
 if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {

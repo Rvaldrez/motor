@@ -14,7 +14,7 @@ $filterMarca = trim($_GET['omarca'] ?? '');
 $filterMax   = trim($_GET['omax'] ?? '');
 $filterMin   = trim($_GET['omin'] ?? '');
 
-$conditions = " AND v.status = 'disponivel'";
+$conditions = " AND v.status = 'completo' AND v.em_negociacao = 0 AND v.usuario_id != $userId";
 $filterParams = [];
 $filterTypes  = '';
 
@@ -82,7 +82,7 @@ while ($row = $result->fetch_assoc()) {
 $stmtData->close();
 
 // Fetch marcas for filter dropdown
-$marcasResult = $conn->query("SELECT DISTINCT marca FROM veiculos WHERE status = 'disponivel' ORDER BY marca ASC");
+$marcasResult = $conn->query("SELECT DISTINCT marca FROM veiculos WHERE status = 'completo' AND em_negociacao = 0 ORDER BY marca ASC");
 $marcas = [];
 while ($m = $marcasResult->fetch_row()) {
     $marcas[] = $m[0];
