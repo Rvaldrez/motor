@@ -10,8 +10,8 @@ if (!isLoggedIn()) {
     echo json_encode(['success' => false, 'message' => 'Acesso negado.']);
     exit;
 }
-if (($_SESSION['tipo'] ?? '') !== 'investidor') {
-    echo json_encode(['success' => false, 'message' => 'Apenas investidores podem enviar propostas.']);
+if (!in_array(($_SESSION['tipo'] ?? ''), ['investidor', 'vendedor', 'administrador'], true)) {
+    echo json_encode(['success' => false, 'message' => 'Acesso não permitido.']);
     exit;
 }
 if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
