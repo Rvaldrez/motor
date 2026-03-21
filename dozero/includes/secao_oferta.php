@@ -14,7 +14,7 @@ $filterMarca = trim($_GET['omarca'] ?? '');
 $filterMax   = trim($_GET['omax'] ?? '');
 $filterMin   = trim($_GET['omin'] ?? '');
 
-$conditions = " AND v.status = 'completo' AND v.em_negociacao = 0 AND v.usuario_id != $userId";
+$conditions = " AND v.status = 'completo' AND v.em_negociacao = 0";
 $filterParams = [];
 $filterTypes  = '';
 
@@ -59,6 +59,7 @@ $offset = ($page - 1) * $perPage;
 $dataSql = "
     SELECT v.id, v.marca, v.modelo, v.ano_fabrica, v.quilometragem, v.preco,
            v.status, v.foto_principal, v.data_cadastro,
+           v.usuario_id AS veiculo_usuario_id,
            u.nome AS vendedor_nome,
            (SELECT COUNT(*) FROM fotos_veiculos fv WHERE fv.veiculo_id = v.id) AS total_fotos,
            (SELECT COUNT(*) FROM propostas p WHERE p.veiculo_id = v.id AND p.usuario_id = ? AND p.proposta_origem_id IS NULL) AS minha_proposta
@@ -172,10 +173,16 @@ while ($m = $marcasResult->fetch_row()) {
             </div>
             <div class="vehicle-card-footer">
                 <div class="vehicle-card-price"><?= formatMoney((float)$v['preco']) ?></div>
+                <?php if ((int)$v['veiculo_usuario_id'] === $userId): ?>
+                <span class="badge-seu-veiculo">
+                    <i class="fa-solid fa-lock"></i> Seu veículo
+                </span>
+                <?php else: ?>
                 <button class="btn-proposta" onclick="abrirModalProposta(<?= (int)$v['id'] ?>, '<?= htmlspecialchars(addslashes($v['marca'] . ' ' . $v['modelo'] . ' ' . $v['ano_fabrica']), ENT_QUOTES, 'UTF-8') ?>', <?= (float)$v['preco'] ?>)">
                     <i class="fa-solid fa-paper-plane"></i>
                     <?= (int)$v['minha_proposta'] > 0 ? 'Nova Proposta' : 'Fazer Proposta' ?>
                 </button>
+                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
@@ -344,6 +351,18 @@ while ($m = $marcasResult->fetch_row()) {
     white-space: nowrap;
 }
 .btn-proposta:hover { background: var(--color-primary-dark); }
+.badge-seu-veiculo {
+    padding: 0.4rem 0.875rem;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
 .proposta-vehicle-info {
     display: flex;
     align-items: center;

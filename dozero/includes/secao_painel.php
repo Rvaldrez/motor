@@ -38,7 +38,7 @@ if ($tipo === 'vendedor') {
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.status = 'aguardando' AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor') AND p.proposta_origem_id IS NULL
     ");
     $stmt->bind_param('i', $userId);
     $stmt->execute();
@@ -88,7 +88,7 @@ if ($tipo === 'vendedor') {
     $stmt->close();
 
     // Propostas pendentes
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status = 'aguardando' AND proposta_origem_id IS NULL");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor') AND proposta_origem_id IS NULL");
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     $stmt->bind_result($propostas_pendentes);
@@ -104,7 +104,7 @@ if ($tipo === 'vendedor') {
     $stmt->close();
 
     // Veículos disponíveis (total na plataforma)
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE status = 'disponivel'");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE status = 'completo' AND em_negociacao = 0");
     $stmt->execute();
     $stmt->bind_result($totalVeiculos);
     $stmt->fetch();
@@ -136,7 +136,7 @@ if ($tipo === 'vendedor') {
     $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE proposta_origem_id IS NULL");
     $stmt->execute(); $stmt->bind_result($totalPropostas); $stmt->fetch(); $stmt->close();
 
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status = 'aguardando' AND proposta_origem_id IS NULL");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status IN ('aguardando', 'aguardando_vendedor') AND proposta_origem_id IS NULL");
     $stmt->execute(); $stmt->bind_result($propostas_pendentes); $stmt->fetch(); $stmt->close();
 
     $stmt = $conn->prepare("SELECT COUNT(*) FROM usuarios WHERE status_confirmacao = 'pendente'");
