@@ -44,29 +44,35 @@ if ($filterStatus !== '') {
 
 // Count
 $stmtCount = $conn->prepare($countSql . $conditions);
-if (!empty($params) || !empty($filterParams)) {
-    $allParams = array_merge($params, $filterParams);
-    $allTypes  = $types . $filterTypes;
-    // Re-bind for count (without vendor_nome param for count query)
-    if ($tipo === 'administrador') {
-        if (!empty($filterParams)) {
-            $stmtCount->bind_param($filterTypes, ...$filterParams);
+$_veiculosDbError = '';
+if ($stmtCount === false) {
+    $totalCount = 0;
+    $_veiculosDbError = 'Count: ' . $conn->error;
+} else {
+    if (!empty($params) || !empty($filterParams)) {
+        $allParams = array_merge($params, $filterParams);
+        $allTypes  = $types . $filterTypes;
+        // Re-bind for count (without vendor_nome param for count query)
+        if ($tipo === 'administrador') {
+            if (!empty($filterParams)) {
+                $stmtCount->bind_param($filterTypes, ...$filterParams);
+            }
+        } else {
+            // count query for vendor has only usuario_id
+            $countParams = [$userId];
+            $countTypes  = 'i';
+            if (!empty($filterParams)) {
+                $countParams = array_merge($countParams, $filterParams);
+                $countTypes .= $filterTypes;
+            }
+            $stmtCount->bind_param($countTypes, ...$countParams);
         }
-    } else {
-        // count query for vendor has only usuario_id
-        $countParams = [$userId];
-        $countTypes  = 'i';
-        if (!empty($filterParams)) {
-            $countParams = array_merge($countParams, $filterParams);
-            $countTypes .= $filterTypes;
-        }
-        $stmtCount->bind_param($countTypes, ...$countParams);
     }
+    $stmtCount->execute();
+    $stmtCount->bind_result($totalCount);
+    $stmtCount->fetch();
+    $stmtCount->close();
 }
-$stmtCount->execute();
-$stmtCount->bind_result($totalCount);
-$stmtCount->fetch();
-$stmtCount->close();
 
 $totalPages = max(1, (int) ceil($totalCount / $perPage));
 $page = min($page, $totalPages);
@@ -76,24 +82,33 @@ $offset = ($page - 1) * $perPage;
 $finalDataSql = $dataSql . $conditions . " ORDER BY v.data_cadastro DESC LIMIT ? OFFSET ?";
 $stmtData = $conn->prepare($finalDataSql);
 
-if ($tipo === 'administrador') {
-    $finalParams = array_merge($filterParams, [$perPage, $offset]);
-    $finalTypes  = $filterTypes . 'ii';
+if ($stmtData === false) {
+    $veiculos = [];
+    if (empty($_veiculosDbError)) {
+        $_veiculosDbError = 'Data: ' . $conn->error;
+    }
 } else {
-    $finalParams = array_merge([$user['nome'], $userId], $filterParams, [$perPage, $offset]);
-    $finalTypes  = 'si' . $filterTypes . 'ii';
-}
+    if ($tipo === 'administrador') {
+        $finalParams = array_merge($filterParams, [$perPage, $offset]);
+        $finalTypes  = $filterTypes . 'ii';
+    } else {
+        $finalParams = array_merge([$user['nome'], $userId], $filterParams, [$perPage, $offset]);
+        $finalTypes  = 'si' . $filterTypes . 'ii';
+    }
 
-if (!empty($finalParams)) {
-    $stmtData->bind_param($finalTypes, ...$finalParams);
+    if (!empty($finalParams)) {
+        $stmtData->bind_param($finalTypes, ...$finalParams);
+    }
+    $stmtData->execute();
+    $result = $stmtData->get_result();
+    $veiculos = [];
+    if ($result !== false) {
+        while ($row = $result->fetch_assoc()) {
+            $veiculos[] = $row;
+        }
+    }
+    $stmtData->close();
 }
-$stmtData->execute();
-$result = $stmtData->get_result();
-$veiculos = [];
-while ($row = $result->fetch_assoc()) {
-    $veiculos[] = $row;
-}
-$stmtData->close();
 
 function veiculos_statusBadge(string $status): string {
     $map = [
@@ -164,6 +179,11 @@ function veiculo_fotoUrl(string $path): string {
 
     <!-- Table -->
     <div class="table-card">
+        <?php if (!empty($_veiculosDbError)): ?>
+        <div style="background:#fee2e2;color:#991b1b;padding:1rem 1.25rem;border-radius:8px;margin-bottom:1rem;font-size:0.875rem;">
+            <strong>Erro de banco de dados (Veículos):</strong> <?= htmlspecialchars($_veiculosDbError, ENT_QUOTES, 'UTF-8') ?>
+        </div>
+        <?php endif; ?>
         <?php if (empty($veiculos)): ?>
         <div class="table-empty">
             <i class="fa-solid fa-car"></i>

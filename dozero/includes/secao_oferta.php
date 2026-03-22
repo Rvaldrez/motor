@@ -44,13 +44,17 @@ if ($filterMax !== '' && is_numeric($filterMax)) {
 
 $countSql = "SELECT COUNT(*) FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1" . $conditions;
 $stmtCount = $conn->prepare($countSql);
-if (!empty($filterParams)) {
-    $stmtCount->bind_param($filterTypes, ...$filterParams);
+if ($stmtCount === false) {
+    $totalCount = 0;
+} else {
+    if (!empty($filterParams)) {
+        $stmtCount->bind_param($filterTypes, ...$filterParams);
+    }
+    $stmtCount->execute();
+    $stmtCount->bind_result($totalCount);
+    $stmtCount->fetch();
+    $stmtCount->close();
 }
-$stmtCount->execute();
-$stmtCount->bind_result($totalCount);
-$stmtCount->fetch();
-$stmtCount->close();
 
 $totalPages = max(1, (int) ceil($totalCount / $perPage));
 $page = min($page, $totalPages);
@@ -65,7 +69,7 @@ $dataSql = "
     FROM veiculos v
     INNER JOIN usuarios u ON u.id = v.usuario_id
     LEFT JOIN (
-        SELECT fv1.veiculo_id, fv1.caminho_foto
+        SELECT fv1.veiculo_id, MIN(fv1.caminho_foto) AS caminho_foto
         FROM fotos_veiculos fv1
         JOIN (
             SELECT veiculo_id, MIN(ordem_exibicao) AS min_ordem
@@ -83,8 +87,10 @@ $finalParams = array_merge($filterParams, [$perPage, $offset]);
 $finalTypes  = $filterTypes . 'ii';
 
 $stmtData = $conn->prepare($dataSql);
+$_ofertaDbError = '';
 if ($stmtData === false) {
     $veiculos = [];
+    $_ofertaDbError = $conn->error;
 } else {
     if (!empty($finalParams)) {
         $stmtData->bind_param($finalTypes, ...$finalParams);
@@ -178,6 +184,11 @@ function oferta_fotoUrl(string $path): string {
     </form>
 
     <!-- Vehicle cards grid -->
+    <?php if (!empty($_ofertaDbError)): ?>
+    <div style="background:#fee2e2;color:#991b1b;padding:1rem 1.25rem;border-radius:8px;margin-bottom:1rem;font-size:0.875rem;">
+        <strong>Erro de banco de dados (Oferta):</strong> <?= htmlspecialchars($_ofertaDbError, ENT_QUOTES, 'UTF-8') ?>
+    </div>
+    <?php endif; ?>
     <?php if (empty($veiculos)): ?>
     <div class="table-card">
         <div class="table-empty">
