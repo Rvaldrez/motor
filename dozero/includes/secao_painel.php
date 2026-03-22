@@ -161,6 +161,53 @@ if ($tipo === 'vendedor') {
     $stmt->close();
 }
 
+// ── Chart data: proposal status distribution ─────────────────
+$chartData = ['pendentes' => 0, 'aceitas' => 0, 'recusadas' => 0, 'negociando' => 0];
+if ($tipo === 'vendedor') {
+    $stmtChart = $conn->prepare("
+        SELECT
+            SUM(CASE WHEN p.status IN ('aguardando_vendedor','aguardando') THEN 1 ELSE 0 END) AS pendentes,
+            SUM(CASE WHEN p.status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
+            SUM(CASE WHEN p.status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
+            SUM(CASE WHEN p.status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
+        FROM propostas p
+        INNER JOIN veiculos v ON v.id = p.veiculo_id
+        WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
+    ");
+    $stmtChart->bind_param('i', $userId);
+} elseif ($tipo === 'investidor') {
+    $stmtChart = $conn->prepare("
+        SELECT
+            SUM(CASE WHEN status IN ('aguardando_vendedor','aguardando') THEN 1 ELSE 0 END) AS pendentes,
+            SUM(CASE WHEN status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
+            SUM(CASE WHEN status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
+            SUM(CASE WHEN status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
+        FROM propostas
+        WHERE usuario_id = ? AND proposta_origem_id IS NULL
+    ");
+    $stmtChart->bind_param('i', $userId);
+} else {
+    $stmtChart = $conn->prepare("
+        SELECT
+            SUM(CASE WHEN status IN ('aguardando_vendedor','aguardando') THEN 1 ELSE 0 END) AS pendentes,
+            SUM(CASE WHEN status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
+            SUM(CASE WHEN status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
+            SUM(CASE WHEN status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
+        FROM propostas
+        WHERE proposta_origem_id IS NULL
+    ");
+}
+$stmtChart->execute();
+$chartRow = $stmtChart->get_result()->fetch_assoc();
+$stmtChart->close();
+if ($chartRow) {
+    $chartData['pendentes']  = (int) $chartRow['pendentes'];
+    $chartData['aceitas']    = (int) $chartRow['aceitas'];
+    $chartData['recusadas']  = (int) $chartRow['recusadas'];
+    $chartData['negociando'] = (int) $chartRow['negociando'];
+}
+$showChart = ($chartData['pendentes'] + $chartData['aceitas'] + $chartData['recusadas'] + $chartData['negociando']) > 0;
+
 // Status badge helper
 function painel_statusBadge(string $status): string {
     $map = [
@@ -312,6 +359,82 @@ function painel_statusBadge(string $status): string {
         </div>
         <?php endif; ?>
     </div>
+
+    <!-- Proposal status chart -->
+    <?php if ($showChart): ?>
+    <div class="overview-chart-card">
+        <div class="table-card-header">
+            <h3><i class="fa-solid fa-chart-pie"></i> Distribuição das Propostas</h3>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="propostasChart" width="260" height="260"></canvas>
+            <div class="chart-legend">
+                <?php if ($chartData['pendentes'] > 0): ?>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background:#f59e0b;"></span>
+                    <span>Pendentes: <strong><?= $chartData['pendentes'] ?></strong></span>
+                </div>
+                <?php endif; ?>
+                <?php if ($chartData['negociando'] > 0): ?>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background:#8b5cf6;"></span>
+                    <span>Em Negociação: <strong><?= $chartData['negociando'] ?></strong></span>
+                </div>
+                <?php endif; ?>
+                <?php if ($chartData['aceitas'] > 0): ?>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background:#10b981;"></span>
+                    <span>Aceitas: <strong><?= $chartData['aceitas'] ?></strong></span>
+                </div>
+                <?php endif; ?>
+                <?php if ($chartData['recusadas'] > 0): ?>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background:#ef4444;"></span>
+                    <span>Recusadas: <strong><?= $chartData['recusadas'] ?></strong></span>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        var ctx = document.getElementById('propostasChart');
+        if (!ctx || typeof Chart === 'undefined') return;
+        var labels = [], data = [], colors = [];
+        <?php if ($chartData['pendentes'] > 0): ?>
+        labels.push('Pendentes'); data.push(<?= $chartData['pendentes'] ?>); colors.push('#f59e0b');
+        <?php endif; ?>
+        <?php if ($chartData['negociando'] > 0): ?>
+        labels.push('Em Negociação'); data.push(<?= $chartData['negociando'] ?>); colors.push('#8b5cf6');
+        <?php endif; ?>
+        <?php if ($chartData['aceitas'] > 0): ?>
+        labels.push('Aceitas'); data.push(<?= $chartData['aceitas'] ?>); colors.push('#10b981');
+        <?php endif; ?>
+        <?php if ($chartData['recusadas'] > 0): ?>
+        labels.push('Recusadas'); data.push(<?= $chartData['recusadas'] ?>); colors.push('#ef4444');
+        <?php endif; ?>
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(c) { return ' ' + c.label + ': ' + c.raw; }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    })();
+    </script>
+    <?php endif; ?>
 
     <!-- Recent tables -->
     <div class="overview-tables">
@@ -518,8 +641,41 @@ function painel_statusBadge(string $status): string {
     cursor: pointer; transition: var(--transition);
 }
 .btn-empty-action:hover { background: var(--color-primary-dark); }
+.overview-chart-card {
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+}
+.chart-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    flex-wrap: wrap;
+}
+.chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+.chart-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
 @media (max-width: 640px) {
     .overview-welcome { flex-direction: column; gap: 1rem; align-items: flex-start; }
     .stats-cards-grid { grid-template-columns: 1fr 1fr; }
+    .chart-wrapper { justify-content: center; }
 }
 </style>

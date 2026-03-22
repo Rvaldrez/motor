@@ -166,7 +166,7 @@ function veiculos_statusBadge(string $status): string {
                     <tr>
                         <th>#</th>
                         <?php if ($tipo === 'administrador'): ?><th>Vendedor</th><?php endif; ?>
-                        <th>Placa</th>
+                        <th>Foto</th>
                         <th>Veículo</th>
                         <th>Ano</th>
                         <th>Km</th>
@@ -178,33 +178,36 @@ function veiculos_statusBadge(string $status): string {
                 </thead>
                 <tbody>
                     <?php foreach ($veiculos as $v): ?>
+                    <?php
+                    $fotoPath = $v['foto_principal'] ?? '';
+                    if ($fotoPath !== '') {
+                        $fotoUrl = (strncmp($fotoPath, 'uploads/', 8) === 0)
+                            ? SITE_URL . '/' . $fotoPath
+                            : UPLOAD_URL . $fotoPath;
+                    } else {
+                        $fotoUrl = '';
+                    }
+                    ?>
                     <tr>
                         <td style="color:var(--color-text-muted);font-size:0.8125rem;">#<?= (int)$v['id'] ?></td>
                         <?php if ($tipo === 'administrador'): ?>
                         <td><?= htmlspecialchars($v['vendedor_nome'], ENT_QUOTES, 'UTF-8') ?></td>
                         <?php endif; ?>
                         <td>
-                            <span style="font-family:monospace;font-weight:700;letter-spacing:0.08em;background:#f3f4f6;padding:2px 8px;border-radius:6px;font-size:0.8125rem;">
-                                <?= htmlspecialchars(strtoupper($v['placa'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
-                            </span>
+                            <?php if ($fotoUrl !== ''): ?>
+                            <img src="<?= htmlspecialchars($fotoUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                 alt="Foto"
+                                 style="width:64px;height:48px;object-fit:cover;border-radius:8px;"
+                                 loading="lazy">
+                            <?php else: ?>
+                            <div style="width:64px;height:48px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                <i class="fa-solid fa-car" style="color:#d1d5db;font-size:1rem;"></i>
+                            </div>
+                            <?php endif; ?>
                         </td>
                         <td>
-                            <div style="display:flex;align-items:center;gap:0.625rem;">
-                                <?php if (!empty($v['foto_principal'])): ?>
-                                <img src="uploads/<?= htmlspecialchars($v['foto_principal'], ENT_QUOTES, 'UTF-8') ?>"
-                                     alt="Foto"
-                                     style="width:44px;height:34px;object-fit:cover;border-radius:6px;flex-shrink:0;"
-                                     loading="lazy">
-                                <?php else: ?>
-                                <div style="width:44px;height:34px;background:#f3f4f6;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                    <i class="fa-solid fa-car" style="color:#d1d5db;font-size:0.875rem;"></i>
-                                </div>
-                                <?php endif; ?>
-                                <div>
-                                    <div style="font-weight:600;font-size:0.875rem;">
-                                        <?= htmlspecialchars($v['marca'] . ' ' . $v['modelo'], ENT_QUOTES, 'UTF-8') ?>
-                                    </div>
-                                </div>
+                            <div style="font-weight:600;font-size:0.875rem;">
+                                <?= htmlspecialchars($v['marca'] . ' ' . $v['modelo'], ENT_QUOTES, 'UTF-8') ?>
                             </div>
                         </td>
                         <td><?= htmlspecialchars($v['ano_fabrica'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
@@ -347,11 +350,11 @@ function editarVeiculo(id) {
     document.getElementById('modalVeiculoError').style.display = 'none';
     document.getElementById('modalVeiculo').style.display = 'flex';
 
-    fetch('actions/get_veiculo.php?id=' + id)
+    fetch('actions/carregar_veiculo.php?id=' + id)
         .then(function (r) { return r.json(); })
         .then(function (data) {
-            if (data.success && data.veiculo) {
-                var v = data.veiculo;
+            if (data.success && data.data) {
+                var v = data.data;
                 document.getElementById('inputPlaca').value   = v.placa || '';
                 document.getElementById('inputMarca').value   = v.marca || '';
                 document.getElementById('inputModelo').value  = v.modelo || '';
@@ -401,7 +404,7 @@ document.getElementById('btnSalvarVeiculo').addEventListener('click', function (
 
     var formData = new FormData(form);
     var isEdit = !!document.getElementById('veiculoId').value;
-    var url = isEdit ? 'actions/salvar_edicao_veiculo.php' : 'actions/salvar_veiculo.php';
+    var url = isEdit ? 'actions/editar_veiculo.php' : 'actions/salvar_veiculo.php';
 
     fetch(url, { method: 'POST', body: formData })
         .then(function (r) { return r.json(); })

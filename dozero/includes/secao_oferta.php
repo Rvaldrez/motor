@@ -58,9 +58,12 @@ $offset = ($page - 1) * $perPage;
 
 $dataSql = "
     SELECT v.id, v.marca, v.modelo, v.ano_fabrica, v.quilometragem, v.preco,
-           v.status, v.foto_principal, v.data_cadastro,
+           v.status, v.data_cadastro,
            v.usuario_id AS veiculo_usuario_id,
            u.nome AS vendedor_nome,
+           IFNULL(v.foto_principal,
+               (SELECT fv.caminho_foto FROM fotos_veiculos fv WHERE fv.veiculo_id = v.id ORDER BY fv.ordem_exibicao ASC LIMIT 1)
+           ) AS foto_exibir,
            (SELECT COUNT(*) FROM fotos_veiculos fv WHERE fv.veiculo_id = v.id) AS total_fotos,
            (SELECT COUNT(*) FROM propostas p WHERE p.veiculo_id = v.id AND p.usuario_id = ? AND p.proposta_origem_id IS NULL) AS minha_proposta
     FROM veiculos v
@@ -87,6 +90,19 @@ $marcasResult = $conn->query("SELECT DISTINCT marca FROM veiculos WHERE status =
 $marcas = [];
 while ($m = $marcasResult->fetch_row()) {
     $marcas[] = $m[0];
+}
+
+/**
+ * Returns the full URL for a vehicle photo.
+ * New system photos are stored as 'fotos_veiculos/filename.jpg' → served from UPLOAD_URL.
+ * Old system photos are stored as 'uploads/fotos_veiculos/id/filename.jpg' → served from SITE_URL root.
+ */
+function oferta_fotoUrl(string $path): string {
+    if ($path === '') return '';
+    if (strncmp($path, 'uploads/', 8) === 0) {
+        return SITE_URL . '/' . $path;
+    }
+    return UPLOAD_URL . $path;
 }
 ?>
 
@@ -138,8 +154,8 @@ while ($m = $marcasResult->fetch_row()) {
         <?php foreach ($veiculos as $v): ?>
         <div class="vehicle-card" data-id="<?= (int)$v['id'] ?>">
             <div class="vehicle-card-image">
-                <?php if (!empty($v['foto_principal'])): ?>
-                <img src="uploads/<?= htmlspecialchars($v['foto_principal'], ENT_QUOTES, 'UTF-8') ?>"
+                <?php if (!empty($v['foto_exibir'])): ?>
+                <img src="<?= htmlspecialchars(oferta_fotoUrl($v['foto_exibir']), ENT_QUOTES, 'UTF-8') ?>"
                      alt="<?= htmlspecialchars($v['marca'] . ' ' . $v['modelo'], ENT_QUOTES, 'UTF-8') ?>"
                      loading="lazy">
                 <?php else: ?>

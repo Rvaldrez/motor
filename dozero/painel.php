@@ -85,6 +85,7 @@ $flash = getFlashMessage();
     <title>MotorGo – <?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="icon" type="image/png" href="imagens/logo_motorgo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <style>
