@@ -61,29 +61,65 @@ $dataSql = "
            v.status, v.data_cadastro,
            v.usuario_id AS veiculo_usuario_id,
            u.nome AS vendedor_nome,
-           IFNULL(v.foto_principal,
-               (SELECT fv.caminho_foto FROM fotos_veiculos fv WHERE fv.veiculo_id = v.id ORDER BY fv.ordem_exibicao ASC LIMIT 1)
-           ) AS foto_exibir,
-           (SELECT COUNT(*) FROM fotos_veiculos fv WHERE fv.veiculo_id = v.id) AS total_fotos,
-           (SELECT COUNT(*) FROM propostas p WHERE p.veiculo_id = v.id AND p.usuario_id = ? AND p.proposta_origem_id IS NULL) AS minha_proposta
+           COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
     FROM veiculos v
     INNER JOIN usuarios u ON u.id = v.usuario_id
+    LEFT JOIN (
+        SELECT fv1.veiculo_id, fv1.caminho_foto
+        FROM fotos_veiculos fv1
+        JOIN (
+            SELECT veiculo_id, MIN(ordem_exibicao) AS min_ordem
+            FROM fotos_veiculos
+            GROUP BY veiculo_id
+        ) fv_min ON fv1.veiculo_id = fv_min.veiculo_id
+               AND fv1.ordem_exibicao = fv_min.min_ordem
+        GROUP BY fv1.veiculo_id
+    ) fv_first ON fv_first.veiculo_id = v.id
     WHERE 1=1" . $conditions . "
     ORDER BY v.data_cadastro DESC LIMIT ? OFFSET ?
 ";
 
-$finalParams = array_merge([$userId], $filterParams, [$perPage, $offset]);
-$finalTypes  = 'i' . $filterTypes . 'ii';
+$finalParams = array_merge($filterParams, [$perPage, $offset]);
+$finalTypes  = $filterTypes . 'ii';
 
 $stmtData = $conn->prepare($dataSql);
-$stmtData->bind_param($finalTypes, ...$finalParams);
-$stmtData->execute();
-$result = $stmtData->get_result();
-$veiculos = [];
-while ($row = $result->fetch_assoc()) {
-    $veiculos[] = $row;
+if ($stmtData === false) {
+    $veiculos = [];
+} else {
+    if (!empty($finalParams)) {
+        $stmtData->bind_param($finalTypes, ...$finalParams);
+    }
+    $stmtData->execute();
+    $result = $stmtData->get_result();
+    $veiculos = [];
+    while ($row = $result->fetch_assoc()) {
+        $veiculos[] = $row;
+    }
+    $stmtData->close();
 }
-$stmtData->close();
+
+// Fetch minha_proposta counts separately (avoids proposta_origem_id dependency)
+if (!empty($veiculos)) {
+    $veiculoIds = implode(',', array_map('intval', array_column($veiculos, 'id')));
+    $propSql = "SELECT veiculo_id, COUNT(*) AS cnt FROM propostas
+                WHERE usuario_id = ? AND veiculo_id IN ($veiculoIds)
+                GROUP BY veiculo_id";
+    $stmtProp = $conn->prepare($propSql);
+    $minhaProposta = [];
+    if ($stmtProp) {
+        $stmtProp->bind_param('i', $userId);
+        $stmtProp->execute();
+        $propResult = $stmtProp->get_result();
+        while ($pr = $propResult->fetch_assoc()) {
+            $minhaProposta[(int)$pr['veiculo_id']] = (int)$pr['cnt'];
+        }
+        $stmtProp->close();
+    }
+    foreach ($veiculos as &$v) {
+        $v['minha_proposta'] = $minhaProposta[(int)$v['id']] ?? 0;
+    }
+    unset($v);
+}
 
 // Fetch marcas for filter dropdown
 $marcasResult = $conn->query("SELECT DISTINCT marca FROM veiculos WHERE status = 'completo' AND em_negociacao = 0 ORDER BY marca ASC");
@@ -163,12 +199,7 @@ function oferta_fotoUrl(string $path): string {
                     <i class="fa-solid fa-car-side"></i>
                 </div>
                 <?php endif; ?>
-                <?php if ((int)$v['total_fotos'] > 1): ?>
-                <span class="vehicle-card-photo-count">
-                    <i class="fa-solid fa-camera"></i> <?= (int)$v['total_fotos'] ?>
-                </span>
-                <?php endif; ?>
-                <?php if ((int)$v['minha_proposta'] > 0): ?>
+                <?php if ((int)($v['minha_proposta'] ?? 0) > 0): ?>
                 <div class="vehicle-card-badge-proposta">
                     <i class="fa-solid fa-paper-plane"></i> Proposta Enviada
                 </div>
@@ -196,7 +227,7 @@ function oferta_fotoUrl(string $path): string {
                 <?php else: ?>
                 <button class="btn-proposta" onclick="abrirModalProposta(<?= (int)$v['id'] ?>, '<?= htmlspecialchars(addslashes($v['marca'] . ' ' . $v['modelo'] . ' ' . $v['ano_fabrica']), ENT_QUOTES, 'UTF-8') ?>', <?= (float)$v['preco'] ?>)">
                     <i class="fa-solid fa-paper-plane"></i>
-                    <?= (int)$v['minha_proposta'] > 0 ? 'Nova Proposta' : 'Fazer Proposta' ?>
+                    <?= (int)($v['minha_proposta'] ?? 0) > 0 ? 'Nova Proposta' : 'Fazer Proposta' ?>
                 </button>
                 <?php endif; ?>
             </div>

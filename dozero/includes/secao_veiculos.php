@@ -12,21 +12,14 @@ $offset = ($page - 1) * $perPage;
 $search = trim($_GET['vs'] ?? '');
 $filterStatus = trim($_GET['vstatus'] ?? '');
 
-// Subquery to get the first photo for vehicles that have no foto_principal (old system)
-$fotoSubquery = "(SELECT fv.caminho_foto FROM fotos_veiculos fv WHERE fv.veiculo_id = v.id ORDER BY fv.ordem_exibicao ASC LIMIT 1)";
-
 if ($tipo === 'administrador') {
     $countSql = "SELECT COUNT(*) FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
-    $dataSql  = "SELECT v.*, u.nome AS vendedor_nome,
-                        IFNULL(v.foto_principal, $fotoSubquery) AS foto_exibir
-                 FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
+    $dataSql  = "SELECT v.*, u.nome AS vendedor_nome FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
     $params = [];
     $types  = '';
 } else {
     $countSql = "SELECT COUNT(*) FROM veiculos v WHERE v.usuario_id = ?";
-    $dataSql  = "SELECT v.*, ? AS vendedor_nome,
-                        IFNULL(v.foto_principal, $fotoSubquery) AS foto_exibir
-                 FROM veiculos v WHERE v.usuario_id = ?";
+    $dataSql  = "SELECT v.*, ? AS vendedor_nome FROM veiculos v WHERE v.usuario_id = ?";
     $params = [$userId, $userId];
     $types  = 'ii';
 }
@@ -198,7 +191,7 @@ function veiculo_fotoUrl(string $path): string {
                 </thead>
                 <tbody>
                     <?php foreach ($veiculos as $v): ?>
-                    <?php $fotoUrl = veiculo_fotoUrl($v['foto_exibir'] ?? ''); ?>
+                    <?php $fotoUrl = veiculo_fotoUrl($v['foto_principal'] ?? ''); ?>
                     <tr>
                         <td style="color:var(--color-text-muted);font-size:0.8125rem;">#<?= (int)$v['id'] ?></td>
                         <?php if ($tipo === 'administrador'): ?>
