@@ -22,11 +22,11 @@ $fotoJoin = "LEFT JOIN fotos_veiculos fv_first ON fv_first.id = (
 )";
 
 if ($tipo === 'administrador') {
-    $countSql = "SELECT COUNT(*) FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
+    $countSql = "SELECT COUNT(*) FROM veiculos v LEFT JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
     $dataSql  = "SELECT v.*, u.nome AS vendedor_nome,
                         COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
                  FROM veiculos v
-                 INNER JOIN usuarios u ON u.id = v.usuario_id
+                 LEFT JOIN usuarios u ON u.id = v.usuario_id
                  $fotoJoin
                  WHERE 1=1";
     $params = [];
@@ -144,13 +144,13 @@ function veiculos_statusBadge(string $status): string {
 
 /**
  * Resolve the full URL for a vehicle photo path.
- * Old system: 'uploads/fotos_veiculos/{id}/{file}' → SITE_URL + '/' + path
+ * Old system: 'uploads/fotos_veiculos/{id}/{file}' → LEGACY_PHOTO_BASE_URL (motorgo.co) + '/' + path
  * New system: 'fotos_veiculos/{file}'              → UPLOAD_URL + path
  */
 function veiculo_fotoUrl(string $path): string {
     if ($path === '') return '';
     if (strncmp($path, 'uploads/', 8) === 0) {
-        return SITE_URL . '/' . $path;
+        return LEGACY_PHOTO_BASE_URL . '/' . $path;
     }
     return UPLOAD_URL . $path;
 }

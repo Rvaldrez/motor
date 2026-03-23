@@ -42,7 +42,7 @@ if ($filterMax !== '' && is_numeric($filterMax)) {
     $filterTypes .= 'd';
 }
 
-$countSql = "SELECT COUNT(*) FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1" . $conditions;
+$countSql = "SELECT COUNT(*) FROM veiculos v LEFT JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1" . $conditions;
 $stmtCount = $conn->prepare($countSql);
 if ($stmtCount === false) {
     $totalCount = 0;
@@ -67,7 +67,7 @@ $dataSql = "
            u.nome AS vendedor_nome,
            COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
     FROM veiculos v
-    INNER JOIN usuarios u ON u.id = v.usuario_id
+    LEFT JOIN usuarios u ON u.id = v.usuario_id
     LEFT JOIN fotos_veiculos fv_first ON fv_first.id = (
         SELECT id FROM fotos_veiculos
         WHERE veiculo_id = v.id
@@ -132,12 +132,12 @@ while ($m = $marcasResult->fetch_row()) {
 /**
  * Returns the full URL for a vehicle photo.
  * New system photos are stored as 'fotos_veiculos/filename.jpg' → served from UPLOAD_URL.
- * Old system photos are stored as 'uploads/fotos_veiculos/id/filename.jpg' → served from SITE_URL root.
+ * Old system photos are stored as 'uploads/fotos_veiculos/id/filename.jpg' → served from LEGACY_PHOTO_BASE_URL (motorgo.co).
  */
 function oferta_fotoUrl(string $path): string {
     if ($path === '') return '';
     if (strncmp($path, 'uploads/', 8) === 0) {
-        return SITE_URL . '/' . $path;
+        return LEGACY_PHOTO_BASE_URL . '/' . $path;
     }
     return UPLOAD_URL . $path;
 }

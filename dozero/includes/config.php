@@ -40,6 +40,9 @@ define('EMAIL_SMTP_PASS',  $_ENV['EMAIL_SENHA']   ?? '');
 define('EMAIL_SMTP_PORT',  465);
 
 // ── Uploads ───────────────────────────────────────────────────
+// Base URL para fotos do sistema legado (motorgo.co) – sempre aponta para o domínio original
+define('LEGACY_PHOTO_BASE_URL', $_ENV['LEGACY_PHOTO_BASE_URL'] ?? 'https://motorgo.co');
+
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 $_uploadScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $_uploadHost   = !empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : parse_url(SITE_URL, PHP_URL_HOST);
