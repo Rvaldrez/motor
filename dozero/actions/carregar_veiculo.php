@@ -51,7 +51,7 @@ $fotos = array_map(function ($f) {
     return [
         'id'             => (int) $f['id'],
         'caminho_foto'   => $f['caminho_foto'],
-        'url'            => UPLOAD_URL . $f['caminho_foto'],
+        'url'            => resolvePhotoUrl($f['caminho_foto']),
         'ordem_exibicao' => (int) $f['ordem_exibicao'],
     ];
 }, $fotos_raw);
@@ -69,7 +69,7 @@ echo json_encode([
         'status'        => $veiculo['status'],
         'em_negociacao' => (bool) $veiculo['em_negociacao'],
         'foto_principal' => $veiculo['foto_principal'],
-        'foto_principal_url' => $veiculo['foto_principal'] ? UPLOAD_URL . $veiculo['foto_principal'] : null,
+        'foto_principal_url' => $veiculo['foto_principal'] ? resolvePhotoUrl($veiculo['foto_principal']) : null,
         'vendedor_nome' => $veiculo['vendedor_nome'],
         'data_cadastro' => $veiculo['data_cadastro'],
         'fotos'         => $fotos,

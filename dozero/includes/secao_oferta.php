@@ -68,17 +68,12 @@ $dataSql = "
            COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
     FROM veiculos v
     INNER JOIN usuarios u ON u.id = v.usuario_id
-    LEFT JOIN (
-        SELECT fv1.veiculo_id, MIN(fv1.caminho_foto) AS caminho_foto
-        FROM fotos_veiculos fv1
-        JOIN (
-            SELECT veiculo_id, MIN(ordem_exibicao) AS min_ordem
-            FROM fotos_veiculos
-            GROUP BY veiculo_id
-        ) fv_min ON fv1.veiculo_id = fv_min.veiculo_id
-               AND fv1.ordem_exibicao = fv_min.min_ordem
-        GROUP BY fv1.veiculo_id
-    ) fv_first ON fv_first.veiculo_id = v.id
+    LEFT JOIN fotos_veiculos fv_first ON fv_first.id = (
+        SELECT id FROM fotos_veiculos
+        WHERE veiculo_id = v.id
+        ORDER BY IFNULL(ordem_exibicao, 0) ASC, id ASC
+        LIMIT 1
+    )
     WHERE 1=1" . $conditions . "
     ORDER BY v.data_cadastro DESC LIMIT ? OFFSET ?
 ";

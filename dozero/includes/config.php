@@ -41,7 +41,10 @@ define('EMAIL_SMTP_PORT',  465);
 
 // ── Uploads ───────────────────────────────────────────────────
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
-define('UPLOAD_URL', SITE_URL . '/dozero/uploads/');
+$_uploadScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$_uploadHost   = !empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : parse_url(SITE_URL, PHP_URL_HOST);
+define('UPLOAD_URL', $_uploadScheme . '://' . $_uploadHost . '/uploads/');
+unset($_uploadScheme, $_uploadHost);
 
 // ── Limites de Upload ─────────────────────────────────────────
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024); // 5 MB

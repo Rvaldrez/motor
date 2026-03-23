@@ -256,6 +256,22 @@ function timeAgo(string $datetime): string
     return 'agora mesmo';
 }
 
+// ── Resolução de URLs de Foto ─────────────────────────────────
+
+/**
+ * Resolve the full URL for a vehicle photo path.
+ * Old system: caminho_foto starts with 'uploads/' → use SITE_URL (photos on motorgo.co).
+ * New system: caminho_foto is relative (e.g. 'fotos_veiculos/file.jpg') → use UPLOAD_URL.
+ */
+function resolvePhotoUrl(string $path): string
+{
+    if ($path === '') return '';
+    if (strncmp($path, 'uploads/', 8) === 0) {
+        return SITE_URL . '/' . $path;
+    }
+    return UPLOAD_URL . $path;
+}
+
 // ── Imagens ───────────────────────────────────────────────────
 
 /**

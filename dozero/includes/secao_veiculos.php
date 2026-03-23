@@ -12,18 +12,14 @@ $offset = ($page - 1) * $perPage;
 $search = trim($_GET['vs'] ?? '');
 $filterStatus = trim($_GET['vstatus'] ?? '');
 
-// Subquery: first photo per vehicle (ONLY_FULL_GROUP_BY-safe, works with old and new photos)
-$fotoJoin = "LEFT JOIN (
-        SELECT fv1.veiculo_id, MIN(fv1.caminho_foto) AS caminho_foto
-        FROM fotos_veiculos fv1
-        JOIN (
-            SELECT veiculo_id, MIN(ordem_exibicao) AS min_ordem
-            FROM fotos_veiculos
-            GROUP BY veiculo_id
-        ) fv_min ON fv1.veiculo_id = fv_min.veiculo_id
-               AND fv1.ordem_exibicao = fv_min.min_ordem
-        GROUP BY fv1.veiculo_id
-    ) fv_first ON fv_first.veiculo_id = v.id";
+// Simple correlated subquery: first photo per vehicle by ordem_exibicao, then id as tiebreaker.
+// Works on MySQL 5.5+ and handles NULL ordem_exibicao via IFNULL.
+$fotoJoin = "LEFT JOIN fotos_veiculos fv_first ON fv_first.id = (
+    SELECT id FROM fotos_veiculos
+    WHERE veiculo_id = v.id
+    ORDER BY IFNULL(ordem_exibicao, 0) ASC, id ASC
+    LIMIT 1
+)";
 
 if ($tipo === 'administrador') {
     $countSql = "SELECT COUNT(*) FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
