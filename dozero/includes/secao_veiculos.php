@@ -12,14 +12,36 @@ $offset = ($page - 1) * $perPage;
 $search = trim($_GET['vs'] ?? '');
 $filterStatus = trim($_GET['vstatus'] ?? '');
 
+// Subquery: first photo per vehicle (ONLY_FULL_GROUP_BY-safe, works with old and new photos)
+$fotoJoin = "LEFT JOIN (
+        SELECT fv1.veiculo_id, MIN(fv1.caminho_foto) AS caminho_foto
+        FROM fotos_veiculos fv1
+        JOIN (
+            SELECT veiculo_id, MIN(ordem_exibicao) AS min_ordem
+            FROM fotos_veiculos
+            GROUP BY veiculo_id
+        ) fv_min ON fv1.veiculo_id = fv_min.veiculo_id
+               AND fv1.ordem_exibicao = fv_min.min_ordem
+        GROUP BY fv1.veiculo_id
+    ) fv_first ON fv_first.veiculo_id = v.id";
+
 if ($tipo === 'administrador') {
     $countSql = "SELECT COUNT(*) FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
-    $dataSql  = "SELECT v.*, u.nome AS vendedor_nome FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
+    $dataSql  = "SELECT v.*, u.nome AS vendedor_nome,
+                        COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
+                 FROM veiculos v
+                 INNER JOIN usuarios u ON u.id = v.usuario_id
+                 $fotoJoin
+                 WHERE 1=1";
     $params = [];
     $types  = '';
 } else {
     $countSql = "SELECT COUNT(*) FROM veiculos v WHERE v.usuario_id = ?";
-    $dataSql  = "SELECT v.*, ? AS vendedor_nome FROM veiculos v WHERE v.usuario_id = ?";
+    $dataSql  = "SELECT v.*, ? AS vendedor_nome,
+                        COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
+                 FROM veiculos v
+                 $fotoJoin
+                 WHERE v.usuario_id = ?";
     $params = [$userId, $userId];
     $types  = 'ii';
 }
@@ -211,7 +233,7 @@ function veiculo_fotoUrl(string $path): string {
                 </thead>
                 <tbody>
                     <?php foreach ($veiculos as $v): ?>
-                    <?php $fotoUrl = veiculo_fotoUrl($v['foto_principal'] ?? ''); ?>
+                    <?php $fotoUrl = veiculo_fotoUrl($v['foto_exibir'] ?? ''); ?>
                     <tr>
                         <td style="color:var(--color-text-muted);font-size:0.8125rem;">#<?= (int)$v['id'] ?></td>
                         <?php if ($tipo === 'administrador'): ?>
@@ -309,7 +331,7 @@ function veiculo_fotoUrl(string $path): string {
             </div>
             <form id="formVeiculo" novalidate>
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                <input type="hidden" name="veiculo_id" id="veiculoId" value="">
+                <input type="hidden" name="id" id="veiculoId" value="">
 
                 <div class="modal-form-grid">
                     <div class="form-group">
