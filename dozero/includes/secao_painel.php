@@ -38,7 +38,7 @@ if ($tipo === 'vendedor') {
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor') AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND p.proposta_origem_id IS NULL
     ");
     $stmt->bind_param('i', $userId);
     $stmt->execute();
@@ -88,7 +88,7 @@ if ($tipo === 'vendedor') {
     $stmt->close();
 
     // Propostas pendentes
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor') AND proposta_origem_id IS NULL");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND proposta_origem_id IS NULL");
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     $stmt->bind_result($propostas_pendentes);
@@ -136,7 +136,7 @@ if ($tipo === 'vendedor') {
     $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE proposta_origem_id IS NULL");
     $stmt->execute(); $stmt->bind_result($totalPropostas); $stmt->fetch(); $stmt->close();
 
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status IN ('aguardando', 'aguardando_vendedor') AND proposta_origem_id IS NULL");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND proposta_origem_id IS NULL");
     $stmt->execute(); $stmt->bind_result($propostas_pendentes); $stmt->fetch(); $stmt->close();
 
     $stmt = $conn->prepare("SELECT COUNT(*) FROM usuarios WHERE status_confirmacao = 'pendente'");
@@ -166,7 +166,7 @@ $chartData = ['pendentes' => 0, 'aceitas' => 0, 'recusadas' => 0, 'negociando' =
 if ($tipo === 'vendedor') {
     $stmtChart = $conn->prepare("
         SELECT
-            SUM(CASE WHEN p.status IN ('aguardando_vendedor','aguardando') THEN 1 ELSE 0 END) AS pendentes,
+            SUM(CASE WHEN p.status IN ('aguardando_vendedor','aguardando','aguardando_comprador') THEN 1 ELSE 0 END) AS pendentes,
             SUM(CASE WHEN p.status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
             SUM(CASE WHEN p.status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
             SUM(CASE WHEN p.status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
@@ -178,7 +178,7 @@ if ($tipo === 'vendedor') {
 } elseif ($tipo === 'investidor') {
     $stmtChart = $conn->prepare("
         SELECT
-            SUM(CASE WHEN status IN ('aguardando_vendedor','aguardando') THEN 1 ELSE 0 END) AS pendentes,
+            SUM(CASE WHEN status IN ('aguardando_vendedor','aguardando','aguardando_comprador') THEN 1 ELSE 0 END) AS pendentes,
             SUM(CASE WHEN status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
             SUM(CASE WHEN status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
             SUM(CASE WHEN status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
@@ -189,7 +189,7 @@ if ($tipo === 'vendedor') {
 } else {
     $stmtChart = $conn->prepare("
         SELECT
-            SUM(CASE WHEN status IN ('aguardando_vendedor','aguardando') THEN 1 ELSE 0 END) AS pendentes,
+            SUM(CASE WHEN status IN ('aguardando_vendedor','aguardando','aguardando_comprador') THEN 1 ELSE 0 END) AS pendentes,
             SUM(CASE WHEN status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
             SUM(CASE WHEN status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
             SUM(CASE WHEN status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
@@ -211,13 +211,15 @@ $showChart = ($chartData['pendentes'] + $chartData['aceitas'] + $chartData['recu
 // Status badge helper
 function painel_statusBadge(string $status): string {
     $map = [
-        'disponivel'  => ['#d1fae5','#065f46','Disponível'],
-        'aguardando'  => ['#fef3c7','#92400e','Aguardando'],
-        'aceita'      => ['#d1fae5','#065f46','Aceita'],
-        'recusada'    => ['#fee2e2','#991b1b','Recusada'],
-        'cancelada'   => ['#f3f4f6','#6b7280','Cancelada'],
-        'contraproposta' => ['#ede9fe','#5b21b6','Contraproposta'],
-        'vendido'     => ['#dbeafe','#1e40af','Vendido'],
+        'disponivel'          => ['#d1fae5','#065f46','Disponível'],
+        'aguardando'          => ['#fef3c7','#92400e','Aguardando'],
+        'aguardando_vendedor' => ['#fef3c7','#92400e','Aguardando'],
+        'aguardando_comprador'=> ['#fef3c7','#92400e','Aguardando'],
+        'aceita'              => ['#d1fae5','#065f46','Aceita'],
+        'recusada'            => ['#fee2e2','#991b1b','Recusada'],
+        'cancelada'           => ['#f3f4f6','#6b7280','Cancelada'],
+        'contraproposta'      => ['#ede9fe','#5b21b6','Contraproposta'],
+        'vendido'             => ['#dbeafe','#1e40af','Vendido'],
         'em_negociacao' => ['#fef3c7','#92400e','Em Negociação'],
         'pausado'     => ['#f3f4f6','#6b7280','Pausado'],
         'pendente'    => ['#fef3c7','#92400e','Pendente'],

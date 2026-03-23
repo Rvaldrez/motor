@@ -84,11 +84,11 @@ $stmt->bind_param('i', $user['id']);
 $stmt->execute();
 $stmt->close();
 
-session_regenerate_id(true);
-$_SESSION['usuario_id']      = (int) $user['id'];
-$_SESSION['nome']            = $user['nome'];
-$_SESSION['email']           = $email;
-$_SESSION['tipo']            = $user['tipo'];
-$_SESSION['status_cadastro'] = $user['status_cadastro'];
+// Preenche campos opcionais que podem não existir no BD legado
+$user['email']  = $email;
+$user['status'] = $user['status'] ?? '';
+$user['foto']   = $user['foto']   ?? '';
+
+setUserSession($user);
 
 echo json_encode(['success' => true, 'message' => 'E-mail confirmado com sucesso!', 'redirect' => '../painel.php']);

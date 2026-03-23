@@ -59,17 +59,32 @@ define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024); // 5 MB
 define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
 
 // ── Ambiente ──────────────────────────────────────────────────
-define('APP_ENV', 'production'); // 'development' | 'production'
-define('APP_DEBUG', false);
+// Em produção (motorgo.co) erros ficam ocultos; em desenvolvimento ficam visíveis.
+$_prodHosts = ['motorgo.co', 'www.motorgo.co'];
+$_curHost   = $_SERVER['HTTP_HOST'] ?? '';
+define('APP_ENV',   in_array($_curHost, $_prodHosts, true) ? 'production' : 'development');
+define('APP_DEBUG', APP_ENV === 'development');
+unset($_prodHosts, $_curHost);
+
+if (APP_DEBUG) {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', 0);
+    error_reporting(0);
+}
 
 // ── Sessão & Timezone ─────────────────────────────────────────
 date_default_timezone_set('America/Sao_Paulo');
 
 if (session_status() === PHP_SESSION_NONE) {
+    $_isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_strict_mode', 1);
-    ini_set('session.cookie_secure', 1);  // HTTPS only
+    ini_set('session.cookie_secure', $_isHttps ? 1 : 0);  // Seguro em HTTPS, funcional em HTTP
     ini_set('session.cookie_samesite', 'Lax');
+    unset($_isHttps);
     session_name('MOTORGO_SESSION');
     session_start();
 }

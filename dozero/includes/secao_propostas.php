@@ -127,6 +127,7 @@ $stmtData->close();
 function props_statusBadge(string $status): string {
     $map = [
         'aguardando_vendedor' => ['#fef3c7','#92400e','Aguardando'],
+        'aguardando_comprador'=> ['#fef3c7','#92400e','Aguardando'],
         'aguardando'          => ['#fef3c7','#92400e','Aguardando'],
         'aceita'              => ['#d1fae5','#065f46','Aceita'],
         'recusada'            => ['#fee2e2','#991b1b','Recusada'],
@@ -238,7 +239,7 @@ function props_statusBadge(string $status): string {
                                 </button>
 
                                 <?php if ($tipo === 'vendedor' || $tipo === 'administrador'): ?>
-                                    <?php if (in_array($p['status'], ['aguardando_vendedor', 'aguardando'], true)): ?>
+                                    <?php if (in_array($p['status'], ['aguardando_vendedor', 'aguardando', 'aguardando_comprador'], true)): ?>
                                     <!-- Vendedor: aceitar / recusar / contraproposta -->
                                     <button class="btn-table-action btn-success" title="Aceitar"
                                             onclick="responderProposta(<?= (int)$p['id'] ?>, 'aceitar')">
@@ -254,7 +255,7 @@ function props_statusBadge(string $status): string {
                                     </button>
                                     <?php endif; ?>
                                 <?php elseif ($tipo === 'investidor'): ?>
-                                    <?php if (in_array($p['status'], ['aguardando_vendedor', 'aguardando'], true)): ?>
+                                    <?php if (in_array($p['status'], ['aguardando_vendedor', 'aguardando', 'aguardando_comprador'], true)): ?>
                                     <!-- Investidor: cancelar proposta aguardando -->
                                     <button class="btn-table-action btn-danger" title="Cancelar"
                                             onclick="responderProposta(<?= (int)$p['id'] ?>, 'cancelar')">
@@ -387,8 +388,9 @@ function fmtBRL(val) {
 
 function statusLabel(s) {
     var m = {
-        aguardando_vendedor: 'Aguardando',
-        aguardando:          'Aguardando',
+        aguardando_vendedor:  'Aguardando',
+        aguardando_comprador: 'Aguardando',
+        aguardando:           'Aguardando',
         aceita:              'Aceita',
         recusada:            'Recusada',
         contraoferta:        'Contraproposta',

@@ -38,11 +38,10 @@ if (!password_verify($senha, $user['senha'])) {
     exit;
 }
 
-session_regenerate_id(true);
-$_SESSION['usuario_id']     = (int) $user['id'];
-$_SESSION['nome']           = $user['nome'];
-$_SESSION['email']          = $user['email'];
-$_SESSION['tipo']           = $user['tipo'];
-$_SESSION['status_cadastro'] = $user['status_cadastro'];
+// Preenche campos opcionais que podem não existir no BD legado
+$user['status'] = $user['status'] ?? '';
+$user['foto']   = $user['foto']   ?? '';
+
+setUserSession($user);
 
 echo json_encode(['success' => true, 'message' => 'Login realizado!', 'redirect' => '../painel.php']);
