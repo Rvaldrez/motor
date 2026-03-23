@@ -22,11 +22,11 @@ $fotoJoin = "LEFT JOIN fotos_veiculos fv_first ON fv_first.id = (
 )";
 
 if ($tipo === 'administrador') {
-    $countSql = "SELECT COUNT(*) FROM veiculos v LEFT JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
+    $countSql = "SELECT COUNT(*) FROM veiculos v INNER JOIN usuarios u ON u.id = v.usuario_id WHERE 1=1";
     $dataSql  = "SELECT v.*, u.nome AS vendedor_nome,
                         COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
                  FROM veiculos v
-                 LEFT JOIN usuarios u ON u.id = v.usuario_id
+                 INNER JOIN usuarios u ON u.id = v.usuario_id
                  $fotoJoin
                  WHERE 1=1";
     $params = [];
