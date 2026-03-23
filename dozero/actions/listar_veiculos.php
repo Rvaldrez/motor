@@ -31,7 +31,7 @@ if ($secao === 'meus') {
     $params[] = $usuario_id;
     $types   .= 'i';
 } else {
-    $where[]  = "v.status = 'completo'";
+    $where[]  = "v.status IN ('completo', 'disponivel')";
     $where[]  = 'v.em_negociacao = 0';
     $where[]  = 'v.usuario_id != ?';
     $params[] = $usuario_id;

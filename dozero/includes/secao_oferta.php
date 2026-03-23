@@ -14,7 +14,7 @@ $filterMarca = trim($_GET['omarca'] ?? '');
 $filterMax   = trim($_GET['omax'] ?? '');
 $filterMin   = trim($_GET['omin'] ?? '');
 
-$conditions = " AND v.em_negociacao = 0";
+$conditions = " AND v.em_negociacao = 0 AND v.status IN ('completo', 'disponivel')";
 $filterParams = [];
 $filterTypes  = '';
 

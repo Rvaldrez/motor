@@ -131,10 +131,12 @@ if ($stmtData === false) {
 function veiculos_statusBadge(string $status): string {
     $map = [
         'disponivel'    => ['#d1fae5','#065f46','Disponível'],
+        'completo'      => ['#d1fae5','#065f46','Disponível'],   // legado
         'em_negociacao' => ['#fef3c7','#92400e','Em Negociação'],
         'vendido'       => ['#dbeafe','#1e40af','Vendido'],
         'pausado'       => ['#f3f4f6','#6b7280','Pausado'],
         'pendente'      => ['#fef3c7','#92400e','Pendente'],
+        'incompleto'    => ['#f3f4f6','#6b7280','Incompleto'],   // legado
         'reprovado'     => ['#fee2e2','#991b1b','Reprovado'],
     ];
     $d = $map[$status] ?? ['#f3f4f6','#6b7280', ucfirst($status)];

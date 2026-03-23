@@ -212,6 +212,8 @@ $showChart = ($chartData['pendentes'] + $chartData['aceitas'] + $chartData['recu
 function painel_statusBadge(string $status): string {
     $map = [
         'disponivel'          => ['#d1fae5','#065f46','Disponível'],
+        'completo'            => ['#d1fae5','#065f46','Disponível'],   // legado
+        'incompleto'          => ['#f3f4f6','#6b7280','Incompleto'],   // legado
         'aguardando'          => ['#fef3c7','#92400e','Aguardando'],
         'aguardando_vendedor' => ['#fef3c7','#92400e','Aguardando'],
         'aguardando_comprador'=> ['#fef3c7','#92400e','Aguardando'],
