@@ -95,7 +95,7 @@ $htmlBody = "
   <p><strong>Investidor:</strong> {$investidor_nome}</p>
   <p><strong>Valor:</strong> " . formatMoney($valor) . "</p>
   " . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "
-  <p><a href='" . SITE_URL . "/dozero/painel.php' style='color:#e63946'>Ver proposta no painel</a></p>
+  <p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Ver proposta no painel</a></p>
 </div>";
 sendEmail($veiculo['vendedor_email'], $veiculo['vendedor_nome'], 'MotorGo – Nova proposta recebida', $htmlBody);
 

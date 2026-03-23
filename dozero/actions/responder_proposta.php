@@ -112,7 +112,7 @@ if ($isVendedor && !$isComprador) {
 
         if ($buyer) {
             $notify_subject = 'MotorGo – Sua proposta foi aceita!';
-            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Proposta aceita – MotorGo</h2><p>Olá, {$buyer['nome']}! Sua proposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>aceita</strong>. Entre em contato pelo painel para finalizar o negócio.</p><p><a href='" . SITE_URL . "/dozero/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
+            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Proposta aceita – MotorGo</h2><p>Olá, {$buyer['nome']}! Sua proposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>aceita</strong>. Entre em contato pelo painel para finalizar o negócio.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
         }
 
     } elseif ($acao === 'recusar') {
@@ -123,7 +123,7 @@ if ($isVendedor && !$isComprador) {
 
         if ($buyer) {
             $notify_subject = 'MotorGo – Sua proposta foi recusada';
-            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Proposta recusada – MotorGo</h2><p>Olá, {$buyer['nome']}! Sua proposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>recusada</strong>. Você pode fazer uma nova oferta.</p><p><a href='" . SITE_URL . "/dozero/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
+            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Proposta recusada – MotorGo</h2><p>Olá, {$buyer['nome']}! Sua proposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>recusada</strong>. Você pode fazer uma nova oferta.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
         }
 
     } elseif ($acao === 'contraproposta') {
@@ -150,7 +150,7 @@ if ($isVendedor && !$isComprador) {
 
         if ($buyer) {
             $notify_subject = 'MotorGo – Você recebeu uma contraproposta';
-            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta – MotorGo</h2><p>Olá, {$buyer['nome']}! O vendedor enviou uma contraproposta de <strong>" . formatMoney($novo_valor) . "</strong>.</p>" . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "<p><a href='" . SITE_URL . "/dozero/painel.php' style='color:#e63946'>Ver no painel</a></p></div>";
+            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta – MotorGo</h2><p>Olá, {$buyer['nome']}! O vendedor enviou uma contraproposta de <strong>" . formatMoney($novo_valor) . "</strong>.</p>" . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "<p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Ver no painel</a></p></div>";
         }
     }
 
@@ -208,7 +208,7 @@ if ($isComprador) {
         $stmt->close();
 
         $notify_subject = 'MotorGo – Contraproposta aceita!';
-        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta aceita – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! Sua contraproposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>aceita</strong>. Entre em contato pelo painel para finalizar o negócio.</p><p><a href='" . SITE_URL . "/dozero/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
+        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta aceita – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! Sua contraproposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>aceita</strong>. Entre em contato pelo painel para finalizar o negócio.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
         sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], $notify_subject, $notify_html);
 
         echo json_encode(['success' => true, 'message' => 'Contraproposta aceita!']);
@@ -221,7 +221,7 @@ if ($isComprador) {
         $stmt->close();
 
         $notify_subject = 'MotorGo – Contraproposta recusada';
-        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta recusada – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! O comprador recusou sua contraproposta. Você pode enviar uma nova oferta.</p><p><a href='" . SITE_URL . "/dozero/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
+        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta recusada – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! O comprador recusou sua contraproposta. Você pode enviar uma nova oferta.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
         sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], $notify_subject, $notify_html);
 
         echo json_encode(['success' => true, 'message' => 'Contraproposta recusada.']);
@@ -249,7 +249,7 @@ if ($isComprador) {
         $stmt->close();
 
         $notify_subject = 'MotorGo – Nova contraproposta recebida';
-        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Nova contraproposta – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! O comprador enviou uma nova contraproposta de <strong>" . formatMoney($novo_valor) . "</strong>.</p>" . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "<p><a href='" . SITE_URL . "/dozero/painel.php' style='color:#e63946'>Ver no painel</a></p></div>";
+        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Nova contraproposta – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! O comprador enviou uma nova contraproposta de <strong>" . formatMoney($novo_valor) . "</strong>.</p>" . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "<p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Ver no painel</a></p></div>";
         sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], $notify_subject, $notify_html);
 
         echo json_encode(['success' => true, 'message' => 'Contraproposta enviada com sucesso!']);

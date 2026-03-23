@@ -2,7 +2,7 @@
 require_once __DIR__ . '/includes/config.php';
 
 if (!empty($_SESSION['usuario_id'])) {
-    header('Location: ' . SITE_URL . '/dozero/painel.php');
+    header('Location: ' . SITE_URL . '/painel.php');
     exit;
 }
 

@@ -39,7 +39,7 @@ $stmt->bind_param('ssi', $token, $expira, $user['id']);
 $stmt->execute();
 $stmt->close();
 
-$link     = SITE_URL . '/dozero/redefinir_senha.php?token=' . $token;
+$link     = SITE_URL . '/redefinir_senha.php?token=' . $token;
 $htmlBody = "
 <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'>
   <h2 style='color:#1a1a2e'>Redefinir senha – MotorGo</h2>

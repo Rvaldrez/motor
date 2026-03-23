@@ -15,7 +15,7 @@ $nomeUsuario = $loggedIn ? htmlspecialchars($_SESSION['nome'] ?? '', ENT_QUOTES,
     <meta name="author" content="MotorGo">
     <meta property="og:title" content="MotorGo – Invista em Veículos">
     <meta property="og:description" content="Multiplique seu capital investindo em veículos com a MotorGo.">
-    <meta property="og:image" content="<?= SITE_URL ?>/dozero/imagens/logo_motorgo.png">
+    <meta property="og:image" content="<?= SITE_URL ?>/imagens/logo_motorgo.png">
     <meta property="og:type" content="website">
     <title>MotorGo – Invista em Veículos</title>
     <link rel="icon" type="image/png" href="imagens/logo_motorgo.png">

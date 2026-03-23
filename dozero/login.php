@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/auth.php';
 
 if (isLoggedIn()) {
-    header('Location: ' . SITE_URL . '/dozero/painel.php');
+    header('Location: ' . SITE_URL . '/painel.php');
     exit;
 }
 

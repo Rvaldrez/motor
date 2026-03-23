@@ -24,11 +24,15 @@ if (file_exists($envFile)) {
 // ── Banco de Dados ───────────────────────────────────────────
 define('DB_HOST', $_ENV['DB_HOST'] ?? '127.0.0.1');
 define('DB_USER', $_ENV['DB_USER'] ?? 'u218663118_motorgo');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+define('DB_PASS', $_ENV['DB_PASS'] ?? 'MotorGo@2025_Vic');
 define('DB_NAME', $_ENV['DB_NAME'] ?? 'u218663118_motorgo');
 
 // ── Site ─────────────────────────────────────────────────────
-define('SITE_URL',  $_ENV['SITE_URL']  ?? 'https://motorgo.co');
+// Auto-detecta o domínio atual se SITE_URL não estiver definido no .env
+$_siteScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$_siteHost   = !empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'motorgo.co';
+define('SITE_URL',  $_ENV['SITE_URL']  ?? ($_siteScheme . '://' . $_siteHost));
+unset($_siteScheme, $_siteHost);
 define('SITE_NAME', 'MotorGo');
 
 // ── E-mail / SMTP ─────────────────────────────────────────────
@@ -40,8 +44,8 @@ define('EMAIL_SMTP_PASS',  $_ENV['EMAIL_SENHA']   ?? '');
 define('EMAIL_SMTP_PORT',  465);
 
 // ── Uploads ───────────────────────────────────────────────────
-// Base URL para fotos do sistema legado (motorgo.co) – sempre aponta para o domínio original
-define('LEGACY_PHOTO_BASE_URL', $_ENV['LEGACY_PHOTO_BASE_URL'] ?? 'https://motorgo.co');
+// Base URL para fotos do sistema legado – usa o mesmo domínio do site (fotos migradas para cá)
+define('LEGACY_PHOTO_BASE_URL', $_ENV['LEGACY_PHOTO_BASE_URL'] ?? SITE_URL);
 
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 $_uploadScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';

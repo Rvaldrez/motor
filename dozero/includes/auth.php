@@ -10,7 +10,7 @@ require_once __DIR__ . '/conexao.php';
 function requireLogin(): void
 {
     if (empty($_SESSION['usuario_id'])) {
-        header('Location: ' . SITE_URL . '/dozero/login.php');
+        header('Location: ' . SITE_URL . '/login.php');
         exit;
     }
 }
@@ -21,7 +21,7 @@ function requireAdmin(): void
     requireLogin();
 
     if (($_SESSION['tipo'] ?? '') !== 'administrador') {
-        header('Location: ' . SITE_URL . '/dozero/painel.php');
+        header('Location: ' . SITE_URL . '/painel.php');
         exit;
     }
 }
@@ -32,7 +32,7 @@ function requireInvestidor(): void
     requireLogin();
 
     if (($_SESSION['tipo'] ?? '') !== 'investidor') {
-        header('Location: ' . SITE_URL . '/dozero/painel.php');
+        header('Location: ' . SITE_URL . '/painel.php');
         exit;
     }
 }
@@ -43,7 +43,7 @@ function requireVendedor(): void
     requireLogin();
 
     if (($_SESSION['tipo'] ?? '') !== 'vendedor') {
-        header('Location: ' . SITE_URL . '/dozero/painel.php');
+        header('Location: ' . SITE_URL . '/painel.php');
         exit;
     }
 }
