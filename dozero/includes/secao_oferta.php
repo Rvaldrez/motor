@@ -65,7 +65,7 @@ $dataSql = "
            v.status, v.data_cadastro,
            v.usuario_id AS veiculo_usuario_id,
            u.nome AS vendedor_nome,
-           COALESCE(v.foto_principal, fv_first.caminho_foto) AS foto_exibir
+           fv_first.caminho_foto AS foto_exibir
     FROM veiculos v
     INNER JOIN usuarios u ON u.id = v.usuario_id
     LEFT JOIN fotos_veiculos fv_first ON fv_first.id = (

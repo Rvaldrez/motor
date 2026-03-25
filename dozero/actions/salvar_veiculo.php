@@ -19,7 +19,7 @@ if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
     exit;
 }
 
-$placa        = strtoupper(preg_replace('/\s+/', '', trim($_POST['placa']        ?? '')));
+$placa        = strtoupper(preg_replace('/[\s\-]/', '', trim($_POST['placa']        ?? '')));
 $marca        = trim($_POST['marca']        ?? '');
 $modelo       = trim($_POST['modelo']       ?? '');
 $ano_fabrica  = (int) ($_POST['ano_fabrica']  ?? 0);
@@ -95,9 +95,11 @@ if (!empty($_FILES['fotos']['name'][0])) {
             if ($foto_principal === '') {
                 $foto_principal = $caminho;
                 $upd = $conn->prepare("UPDATE veiculos SET foto_principal = ? WHERE id = ?");
-                $upd->bind_param('si', $foto_principal, $veiculo_id);
-                $upd->execute();
-                $upd->close();
+                if ($upd) {
+                    $upd->bind_param('si', $foto_principal, $veiculo_id);
+                    $upd->execute();
+                    $upd->close();
+                }
             }
         }
     }

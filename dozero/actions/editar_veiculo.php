@@ -126,8 +126,10 @@ $fp_row = $fp->get_result()->fetch_assoc();
 $fp->close();
 $nova_principal = $fp_row ? $fp_row['caminho_foto'] : '';
 $upd = $conn->prepare("UPDATE veiculos SET foto_principal = ? WHERE id = ?");
-$upd->bind_param('si', $nova_principal, $id);
-$upd->execute();
-$upd->close();
+if ($upd) {
+    $upd->bind_param('si', $nova_principal, $id);
+    $upd->execute();
+    $upd->close();
+}
 
 echo json_encode(['success' => true, 'message' => 'Veículo atualizado com sucesso!']);
