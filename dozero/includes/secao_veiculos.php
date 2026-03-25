@@ -443,7 +443,8 @@ if (btnNovo) btnNovo.addEventListener('click', abrirModalVeiculo);
 var btnNovoEmpty = document.getElementById('btnNovoVeiculoEmpty');
 if (btnNovoEmpty) btnNovoEmpty.addEventListener('click', abrirModalVeiculo);
 
-document.getElementById('btnSalvarVeiculo').addEventListener('click', function () {
+document.getElementById('btnSalvarVeiculo').addEventListener('click', function (e) {
+    e.preventDefault();
     var form = document.getElementById('formVeiculo');
     var inputs = form.querySelectorAll('[required]');
     var valid = true;
@@ -464,7 +465,10 @@ document.getElementById('btnSalvarVeiculo').addEventListener('click', function (
     var url = isEdit ? 'actions/editar_veiculo.php' : 'actions/salvar_veiculo.php';
 
     fetch(url, { method: 'POST', body: formData })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+            if (!r.ok) throw new Error('Erro de servidor: HTTP ' + r.status);
+            return r.json();
+        })
         .then(function (data) {
             if (data.success) {
                 window.location.href = '?secao=veiculos';
@@ -474,11 +478,15 @@ document.getElementById('btnSalvarVeiculo').addEventListener('click', function (
                 var errBox = document.getElementById('modalVeiculoError');
                 document.getElementById('modalVeiculoErrorMsg').textContent = data.message || 'Erro ao salvar veículo.';
                 errBox.style.display = 'flex';
+                errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         })
-        .catch(function () {
+        .catch(function (err) {
             btn.disabled = false;
             btn.classList.remove('loading');
+            var errBox = document.getElementById('modalVeiculoError');
+            document.getElementById('modalVeiculoErrorMsg').textContent = err.message || 'Erro ao conectar com o servidor.';
+            errBox.style.display = 'flex';
         });
 });
 

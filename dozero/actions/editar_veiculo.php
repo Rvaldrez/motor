@@ -16,7 +16,7 @@ if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
 }
 
 $id           = (int) ($_POST['id'] ?? 0);
-$placa        = strtoupper(preg_replace('/\s+/', '', trim($_POST['placa']        ?? '')));
+$placa        = strtoupper(preg_replace('/[\s\-]/', '', trim($_POST['placa']        ?? '')));
 $marca        = trim($_POST['marca']        ?? '');
 $modelo       = trim($_POST['modelo']       ?? '');
 $ano_fabrica  = (int) ($_POST['ano_fabrica']  ?? 0);
@@ -32,10 +32,10 @@ if ($id <= 0) {
 }
 
 if ($tipo === 'administrador') {
-    $stmt = $conn->prepare("SELECT id, foto_principal FROM veiculos WHERE id = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id FROM veiculos WHERE id = ? LIMIT 1");
     $stmt->bind_param('i', $id);
 } else {
-    $stmt = $conn->prepare("SELECT id, foto_principal FROM veiculos WHERE id = ? AND usuario_id = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id FROM veiculos WHERE id = ? AND usuario_id = ? LIMIT 1");
     $stmt->bind_param('ii', $id, $usuario_id);
 }
 $stmt->execute();
