@@ -667,7 +667,7 @@ $flash = getFlashMessage();
     <aside class="sidebar" id="sidebar">
         <!-- Logo -->
         <div class="sidebar-logo-area">
-            <img src="imagens/logo_motorgo.png" alt="MotorGo" class="sidebar-logo-img"
+            <img src="imagens/logo_motorgo_blk.png" alt="MotorGo" class="sidebar-logo-img"
                  onerror="this.style.display='none'">
             <span class="sidebar-logo-wordmark">Motor<em>Go</em></span>
         </div>
@@ -709,9 +709,6 @@ $flash = getFlashMessage();
                        href="painel.php?secao=veiculos" data-section="veiculos">
                         <i class="fa-solid fa-car-side"></i>
                         <span><?= $tipo === 'administrador' ? 'Todos os Veículos' : 'Meus Veículos' ?></span>
-                        <?php if ($badgeVeiculos > 0): ?>
-                        <span class="sidebar-badge"><?= (int)$badgeVeiculos ?></span>
-                        <?php endif; ?>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -722,9 +719,6 @@ $flash = getFlashMessage();
                        href="painel.php?secao=oferta" data-section="oferta">
                         <i class="fa-solid fa-car-burst"></i>
                         <span>Oferta de Veículos</span>
-                        <?php if ($tipo === 'investidor' && $badgeVeiculos > 0): ?>
-                        <span class="sidebar-badge"><?= (int)$badgeVeiculos ?></span>
-                        <?php endif; ?>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -736,9 +730,6 @@ $flash = getFlashMessage();
                         <span>
                             <?= $tipo === 'administrador' ? 'Todas as Propostas' : 'Propostas' ?>
                         </span>
-                        <?php if ($badgePropostas > 0): ?>
-                        <span class="sidebar-badge"><?= (int)$badgePropostas ?></span>
-                        <?php endif; ?>
                     </a>
                 </li>
 

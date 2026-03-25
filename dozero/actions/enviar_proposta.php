@@ -56,7 +56,7 @@ if ($veiculo['em_negociacao']) {
     echo json_encode(['success' => false, 'message' => 'Este veículo já está em negociação.']);
     exit;
 }
-if ($veiculo['status'] !== 'completo') {
+if (!in_array($veiculo['status'], ['completo', 'disponivel'], true)) {
     echo json_encode(['success' => false, 'message' => 'Veículo indisponível.']);
     exit;
 }

@@ -265,6 +265,7 @@ function veiculo_fotoUrl(string $path): string {
                             <div style="display:flex;gap:0.375rem;">
                                 <?php if ($tipo !== 'administrador'): ?>
                                 <button class="btn-table-action btn-edit"
+                                        type="button"
                                         title="Editar"
                                         onclick="editarVeiculo(<?= (int)$v['id'] ?>)">
                                     <i class="fa-solid fa-pen-to-square"></i>
@@ -392,10 +393,15 @@ function editarVeiculo(id) {
     document.getElementById('modalVeiculoTitle').textContent = 'Editar Veículo';
     document.getElementById('veiculoId').value = id;
     document.getElementById('modalVeiculoError').style.display = 'none';
+    document.getElementById('formVeiculo').reset();
+    document.getElementById('veiculoId').value = id;
     document.getElementById('modalVeiculo').style.display = 'flex';
 
     fetch('actions/carregar_veiculo.php?id=' + id)
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
         .then(function (data) {
             if (data.success && data.data) {
                 var v = data.data;
@@ -405,7 +411,14 @@ function editarVeiculo(id) {
                 document.getElementById('inputAno').value     = v.ano_fabrica || '';
                 document.getElementById('inputKm').value      = v.quilometragem || '';
                 document.getElementById('inputPreco').value   = v.preco || '';
+            } else {
+                document.getElementById('modalVeiculoErrorMsg').textContent = (data && data.message) ? data.message : 'Erro ao carregar dados do veículo.';
+                document.getElementById('modalVeiculoError').style.display = 'flex';
             }
+        })
+        .catch(function (err) {
+            document.getElementById('modalVeiculoErrorMsg').textContent = 'Erro de conexão ao carregar veículo.';
+            document.getElementById('modalVeiculoError').style.display = 'flex';
         });
 }
 
