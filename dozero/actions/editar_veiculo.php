@@ -33,9 +33,17 @@ if ($id <= 0) {
 
 if ($tipo === 'administrador') {
     $stmt = $conn->prepare("SELECT id FROM veiculos WHERE id = ? LIMIT 1");
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => APP_DEBUG ? 'Erro DB: ' . $conn->error : 'Erro interno.']);
+        exit;
+    }
     $stmt->bind_param('i', $id);
 } else {
     $stmt = $conn->prepare("SELECT id FROM veiculos WHERE id = ? AND usuario_id = ? LIMIT 1");
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => APP_DEBUG ? 'Erro DB: ' . $conn->error : 'Erro interno.']);
+        exit;
+    }
     $stmt->bind_param('ii', $id, $usuario_id);
 }
 $stmt->execute();
@@ -60,8 +68,17 @@ if (!empty($erros)) {
 }
 
 $stmt = $conn->prepare("UPDATE veiculos SET placa=?, marca=?, modelo=?, ano_fabrica=?, quilometragem=?, preco=? WHERE id=?");
+if (!$stmt) {
+    echo json_encode(['success' => false, 'message' => APP_DEBUG ? 'Erro ao preparar UPDATE: ' . $conn->error : 'Erro ao atualizar veículo.']);
+    exit;
+}
 $stmt->bind_param('sssiidi', $placa, $marca, $modelo, $ano_fabrica, $quilometragem, $preco, $id);
-$stmt->execute();
+if (!$stmt->execute()) {
+    $errMsg = APP_DEBUG ? 'Erro ao atualizar veículo: ' . $conn->error : 'Erro ao atualizar veículo.';
+    $stmt->close();
+    echo json_encode(['success' => false, 'message' => $errMsg]);
+    exit;
+}
 $stmt->close();
 
 // Remove fotos solicitadas

@@ -114,6 +114,18 @@ $resultados[] = addColumnIfMissing(
 );
 
 // ═══════════════════════════════════════════════════════════════
+//  TABELA: propostas
+// ═══════════════════════════════════════════════════════════════
+
+// 6. proposta_origem_id — chave estrangeira para contropropostas (auto-referência).
+//    Se NULL: proposta original. Se preenchido: contra-proposta da proposta original.
+//    O novo sistema filtra por proposta_origem_id IS NULL para exibir apenas originais.
+$resultados[] = addColumnIfMissing(
+    $conn, 'propostas', 'proposta_origem_id',
+    "INT(11) NULL DEFAULT NULL"
+);
+
+// ═══════════════════════════════════════════════════════════════
 //  COLUNAS JÁ EXISTENTES NO SCHEMA LEGADO (apenas informativo)
 // ═══════════════════════════════════════════════════════════════
 $jaExistem = [

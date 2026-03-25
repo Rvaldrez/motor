@@ -16,48 +16,64 @@ $propostasRecentes = [];
 if ($tipo === 'vendedor') {
     // Total de veículos do vendedor
     $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE usuario_id = ?");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($totalVeiculos);
-    $stmt->fetch();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($totalVeiculos);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     // Propostas recebidas nos veículos do vendedor
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ?
     ");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($totalPropostas);
-    $stmt->fetch();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($totalPropostas);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     // Propostas pendentes (aguardando resposta)
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador')
     ");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($propostas_pendentes);
-    $stmt->fetch();
-    $stmt->close();
-
-    // Veículos recentes
-    $stmt = $conn->prepare("
-        SELECT id, marca, modelo, ano_fabrica, preco, status, foto_principal
-        FROM veiculos WHERE usuario_id = ? ORDER BY data_cadastro DESC LIMIT 5
-    ");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $veiculosRecentes[] = $row;
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($propostas_pendentes);
+        $stmt->fetch();
+        $stmt->close();
     }
-    $stmt->close();
+
+    // Veículos recentes – usa fotos_veiculos para não depender da coluna foto_principal
+    $stmt = $conn->prepare("
+        SELECT v.id, v.marca, v.modelo, v.ano_fabrica, v.preco, v.status,
+               fv.caminho_foto AS foto_principal
+        FROM veiculos v
+        LEFT JOIN fotos_veiculos fv ON fv.id = (
+            SELECT id FROM fotos_veiculos
+            WHERE veiculo_id = v.id
+            ORDER BY IFNULL(ordem_exibicao, 0) ASC, id ASC
+            LIMIT 1
+        )
+        WHERE v.usuario_id = ? ORDER BY v.data_cadastro DESC LIMIT 5
+    ");
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $veiculosRecentes[] = $row;
+        }
+        $stmt->close();
+    }
 
     // Propostas recentes recebidas
     $stmt = $conn->prepare("
@@ -67,48 +83,58 @@ if ($tipo === 'vendedor') {
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = p.usuario_id
-        WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ?
         ORDER BY p.data_proposta DESC LIMIT 5
     ");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $propostasRecentes[] = $row;
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $propostasRecentes[] = $row;
+        }
+        $stmt->close();
     }
-    $stmt->close();
 
 } elseif ($tipo === 'investidor') {
     // Total de propostas enviadas
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND proposta_origem_id IS NULL");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($totalPropostas);
-    $stmt->fetch();
-    $stmt->close();
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ?");
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($totalPropostas);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     // Propostas pendentes
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND proposta_origem_id IS NULL");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($propostas_pendentes);
-    $stmt->fetch();
-    $stmt->close();
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador')");
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($propostas_pendentes);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     // Propostas aceitas
     $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status = 'aceita'");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($propostas_aceitas);
-    $stmt->fetch();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($propostas_aceitas);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     // Veículos disponíveis (total na plataforma)
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE status = 'completo' AND em_negociacao = 0");
-    $stmt->execute();
-    $stmt->bind_result($totalVeiculos);
-    $stmt->fetch();
-    $stmt->close();
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE status IN ('completo', 'disponivel') AND em_negociacao = 0");
+    if ($stmt) {
+        $stmt->execute();
+        $stmt->bind_result($totalVeiculos);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     // Propostas recentes enviadas
     $stmt = $conn->prepare("
@@ -118,29 +144,31 @@ if ($tipo === 'vendedor') {
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = v.usuario_id
-        WHERE p.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE p.usuario_id = ?
         ORDER BY p.data_proposta DESC LIMIT 5
     ");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $propostasRecentes[] = $row;
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $propostasRecentes[] = $row;
+        }
+        $stmt->close();
     }
-    $stmt->close();
 
 } elseif ($tipo === 'administrador') {
     $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos");
-    $stmt->execute(); $stmt->bind_result($totalVeiculos); $stmt->fetch(); $stmt->close();
+    if ($stmt) { $stmt->execute(); $stmt->bind_result($totalVeiculos); $stmt->fetch(); $stmt->close(); }
 
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE proposta_origem_id IS NULL");
-    $stmt->execute(); $stmt->bind_result($totalPropostas); $stmt->fetch(); $stmt->close();
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas");
+    if ($stmt) { $stmt->execute(); $stmt->bind_result($totalPropostas); $stmt->fetch(); $stmt->close(); }
 
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND proposta_origem_id IS NULL");
-    $stmt->execute(); $stmt->bind_result($propostas_pendentes); $stmt->fetch(); $stmt->close();
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador')");
+    if ($stmt) { $stmt->execute(); $stmt->bind_result($propostas_pendentes); $stmt->fetch(); $stmt->close(); }
 
     $stmt = $conn->prepare("SELECT COUNT(*) FROM usuarios WHERE status_confirmacao = 'pendente'");
-    $stmt->execute(); $stmt->bind_result($propostas_aceitas); $stmt->fetch(); $stmt->close();
+    if ($stmt) { $stmt->execute(); $stmt->bind_result($propostas_aceitas); $stmt->fetch(); $stmt->close(); }
 
     // Últimas propostas
     $stmt = $conn->prepare("
@@ -150,15 +178,16 @@ if ($tipo === 'vendedor') {
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = p.usuario_id
-        WHERE p.proposta_origem_id IS NULL
         ORDER BY p.data_proposta DESC LIMIT 5
     ");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $propostasRecentes[] = $row;
+    if ($stmt) {
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $propostasRecentes[] = $row;
+        }
+        $stmt->close();
     }
-    $stmt->close();
 }
 
 // ── Chart data: proposal status distribution ─────────────────
@@ -172,9 +201,9 @@ if ($tipo === 'vendedor') {
             SUM(CASE WHEN p.status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ?
     ");
-    $stmtChart->bind_param('i', $userId);
+    if ($stmtChart) $stmtChart->bind_param('i', $userId);
 } elseif ($tipo === 'investidor') {
     $stmtChart = $conn->prepare("
         SELECT
@@ -183,9 +212,9 @@ if ($tipo === 'vendedor') {
             SUM(CASE WHEN status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
             SUM(CASE WHEN status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
         FROM propostas
-        WHERE usuario_id = ? AND proposta_origem_id IS NULL
+        WHERE usuario_id = ?
     ");
-    $stmtChart->bind_param('i', $userId);
+    if ($stmtChart) $stmtChart->bind_param('i', $userId);
 } else {
     $stmtChart = $conn->prepare("
         SELECT
@@ -194,12 +223,15 @@ if ($tipo === 'vendedor') {
             SUM(CASE WHEN status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
             SUM(CASE WHEN status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
         FROM propostas
-        WHERE proposta_origem_id IS NULL
     ");
 }
-$stmtChart->execute();
-$chartRow = $stmtChart->get_result()->fetch_assoc();
-$stmtChart->close();
+if ($stmtChart) {
+    $stmtChart->execute();
+    $chartRow = $stmtChart->get_result()->fetch_assoc();
+    $stmtChart->close();
+} else {
+    $chartRow = null;
+}
 if ($chartRow) {
     $chartData['pendentes']  = (int) $chartRow['pendentes'];
     $chartData['aceitas']    = (int) $chartRow['aceitas'];

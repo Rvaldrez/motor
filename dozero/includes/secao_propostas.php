@@ -87,22 +87,24 @@ if ($filterStatus !== '') {
 
 // Count
 $stmtCount = $conn->prepare($countSql . $filterConditions);
-$allCountParams = array_merge($baseParams, $filterParams);
-$allCountTypes  = $baseTypes . $filterTypes;
-if (!empty($allCountParams)) {
-    // Count queries have only one bind for userId (first occurrence) per type
-    if ($tipo === 'vendedor' || $tipo === 'investidor') {
-        $cp = array_merge([(int)$userId], $filterParams);
-        $ct = 'i' . $filterTypes;
-        $stmtCount->bind_param($ct, ...$cp);
-    } elseif (!empty($filterParams)) {
-        $stmtCount->bind_param($filterTypes, ...$filterParams);
+if ($stmtCount === false) {
+    $totalCount = 0;
+} else {
+    $allCountParams = array_merge($baseParams, $filterParams);
+    if (!empty($allCountParams)) {
+        if ($tipo === 'vendedor' || $tipo === 'investidor') {
+            $cp = array_merge([(int)$userId], $filterParams);
+            $ct = 'i' . $filterTypes;
+            $stmtCount->bind_param($ct, ...$cp);
+        } elseif (!empty($filterParams)) {
+            $stmtCount->bind_param($filterTypes, ...$filterParams);
+        }
     }
+    $stmtCount->execute();
+    $stmtCount->bind_result($totalCount);
+    $stmtCount->fetch();
+    $stmtCount->close();
 }
-$stmtCount->execute();
-$stmtCount->bind_result($totalCount);
-$stmtCount->fetch();
-$stmtCount->close();
 
 $totalPages = max(1, (int) ceil($totalCount / $perPage));
 $page = min($page, $totalPages);
@@ -111,18 +113,22 @@ $offset = ($page - 1) * $perPage;
 // Fetch data
 $finalSql = $dataSql . $filterConditions . " ORDER BY p.data_proposta DESC LIMIT ? OFFSET ?";
 $stmtData = $conn->prepare($finalSql);
-$allDataParams = array_merge($baseParams, $filterParams, [$perPage, $offset]);
-$allDataTypes  = $baseTypes . $filterTypes . 'ii';
-if (!empty($allDataParams)) {
-    $stmtData->bind_param($allDataTypes, ...$allDataParams);
-}
-$stmtData->execute();
-$result = $stmtData->get_result();
 $propostas = [];
-while ($row = $result->fetch_assoc()) {
-    $propostas[] = $row;
+if ($stmtData === false) {
+    // column may not exist yet – gracefully show empty list
+} else {
+    $allDataParams = array_merge($baseParams, $filterParams, [$perPage, $offset]);
+    $allDataTypes  = $baseTypes . $filterTypes . 'ii';
+    if (!empty($allDataParams)) {
+        $stmtData->bind_param($allDataTypes, ...$allDataParams);
+    }
+    $stmtData->execute();
+    $result = $stmtData->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $propostas[] = $row;
+    }
+    $stmtData->close();
 }
-$stmtData->close();
 
 function props_statusBadge(string $status): string {
     $map = [

@@ -149,7 +149,14 @@ function sendEmail(
     string $htmlBody,
     string $textBody = ''
 ): bool {
-    require_once __DIR__ . '/../../vendor/autoload.php';
+    $autoload = __DIR__ . '/../../vendor/autoload.php';
+    if (!file_exists($autoload)) {
+        if (APP_DEBUG) {
+            error_log('[MotorGo] sendEmail: vendor/autoload.php não encontrado. Instale o PHPMailer via Composer.');
+        }
+        return false;
+    }
+    require_once $autoload;
 
     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 

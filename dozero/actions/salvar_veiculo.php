@@ -42,6 +42,10 @@ if (!empty($erros)) {
 }
 
 $stmt = $conn->prepare("SELECT id FROM veiculos WHERE placa = ? AND usuario_id = ? LIMIT 1");
+if (!$stmt) {
+    echo json_encode(['success' => false, 'message' => APP_DEBUG ? 'Erro DB: ' . $conn->error : 'Erro interno.']);
+    exit;
+}
 $stmt->bind_param('si', $placa, $usuario_id);
 $stmt->execute();
 $stmt->store_result();
@@ -56,10 +60,15 @@ $stmt = $conn->prepare(
     "INSERT INTO veiculos (usuario_id, placa, marca, modelo, ano_fabrica, quilometragem, preco, status, em_negociacao, data_cadastro)
      VALUES (?, ?, ?, ?, ?, ?, ?, 'completo', 0, NOW())"
 );
+if (!$stmt) {
+    echo json_encode(['success' => false, 'message' => APP_DEBUG ? 'Erro ao preparar INSERT: ' . $conn->error : 'Erro ao salvar veículo.']);
+    exit;
+}
 $stmt->bind_param('isssiid', $usuario_id, $placa, $marca, $modelo, $ano_fabrica, $quilometragem, $preco);
 if (!$stmt->execute()) {
+    $errMsg = APP_DEBUG ? 'Erro ao salvar veículo: ' . $conn->error : 'Erro ao salvar veículo. Tente novamente.';
     $stmt->close();
-    echo json_encode(['success' => false, 'message' => 'Erro ao salvar veículo.']);
+    echo json_encode(['success' => false, 'message' => $errMsg]);
     exit;
 }
 $veiculo_id = (int) $conn->insert_id;

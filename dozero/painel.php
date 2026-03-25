@@ -33,33 +33,41 @@ if ($tipo === 'vendedor' || $tipo === 'investidor') {
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador')
     ");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($badgePropostas);
-    $stmt->fetch();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($badgePropostas);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE usuario_id = ?");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $stmt->bind_result($badgeVeiculos);
-    $stmt->fetch();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($badgeVeiculos);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
 } elseif ($tipo === 'administrador') {
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador') AND proposta_origem_id IS NULL");
-    $stmt->execute();
-    $stmt->bind_result($badgePropostas);
-    $stmt->fetch();
-    $stmt->close();
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador')");
+    if ($stmt) {
+        $stmt->execute();
+        $stmt->bind_result($badgePropostas);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     $stmt = $conn->prepare("SELECT COUNT(*) FROM veiculos WHERE status = 'pendente'");
-    $stmt->execute();
-    $stmt->bind_result($badgeVeiculos);
-    $stmt->fetch();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->execute();
+        $stmt->bind_result($badgeVeiculos);
+        $stmt->fetch();
+        $stmt->close();
+    }
 }
 
 // ── Page title per section ───────────────────────────────────
