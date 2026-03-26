@@ -28,11 +28,21 @@ define('DB_PASS', $_ENV['DB_PASS'] ?? 'MotorGo@2025_Vic');
 define('DB_NAME', $_ENV['DB_NAME'] ?? 'u218663118_motorgo');
 
 // ── Site ─────────────────────────────────────────────────────
-// Auto-detecta o domínio atual se SITE_URL não estiver definido no .env
+// Auto-detecta domínio e subpasta (ex.: /nw) a partir de SCRIPT_NAME.
+// Se SITE_URL estiver no .env, esse valor prevalece.
 $_siteScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $_siteHost   = !empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'motorgo.co';
-define('SITE_URL',  $_ENV['SITE_URL']  ?? ($_siteScheme . '://' . $_siteHost));
-unset($_siteScheme, $_siteHost);
+$_siteOrigin = $_siteScheme . '://' . $_siteHost;   // ex.: https://motorgo.co
+
+// Detecta subpasta: /nw/painel.php → /nw   |   /painel.php → (vazio)
+$_scriptName  = $_SERVER['SCRIPT_NAME'] ?? '';
+$_firstSegment = explode('/', ltrim($_scriptName, '/'), 2)[0] ?? '';
+$_basePath    = (strpos($_firstSegment, '.php') === false && $_firstSegment !== '')
+                ? '/' . $_firstSegment
+                : '';
+unset($_firstSegment, $_scriptName);
+
+define('SITE_URL',  $_ENV['SITE_URL']  ?? ($_siteOrigin . $_basePath));
 define('SITE_NAME', 'MotorGo');
 
 // ── E-mail / SMTP ─────────────────────────────────────────────
@@ -44,14 +54,15 @@ define('EMAIL_SMTP_PASS',  $_ENV['EMAIL_SENHA']   ?? '');
 define('EMAIL_SMTP_PORT',  465);
 
 // ── Uploads ───────────────────────────────────────────────────
-// Base URL para fotos do sistema legado – usa o mesmo domínio do site (fotos migradas para cá)
-define('LEGACY_PHOTO_BASE_URL', $_ENV['LEGACY_PHOTO_BASE_URL'] ?? SITE_URL);
+// LEGACY_PHOTO_BASE_URL aponta para a RAIZ do domínio (scheme+host sem subpasta)
+// porque o sistema antigo armazena fotos em motorgo.co/uploads/fotos_veiculos/...
+// independente da subpasta onde o novo sistema está instalado (ex.: /nw).
+define('LEGACY_PHOTO_BASE_URL', $_ENV['LEGACY_PHOTO_BASE_URL'] ?? $_siteOrigin);
+unset($_siteScheme, $_siteHost, $_siteOrigin, $_basePath);
 
+// Pasta de uploads do novo sistema (filesystem) e URL correspondente
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
-$_uploadScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$_uploadHost   = !empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : parse_url(SITE_URL, PHP_URL_HOST);
-define('UPLOAD_URL', $_uploadScheme . '://' . $_uploadHost . '/uploads/');
-unset($_uploadScheme, $_uploadHost);
+define('UPLOAD_URL', SITE_URL . '/uploads/');
 
 // ── Limites de Upload ─────────────────────────────────────────
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024); // 5 MB
