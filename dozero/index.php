@@ -15,10 +15,10 @@ $nomeUsuario = $loggedIn ? htmlspecialchars($_SESSION['nome'] ?? '', ENT_QUOTES,
     <meta name="author" content="MotorGo">
     <meta property="og:title" content="MotorGo – Invista em Veículos">
     <meta property="og:description" content="Multiplique seu capital investindo em veículos com a MotorGo.">
-    <meta property="og:image" content="<?= SITE_URL ?>/imagens/logo_motorgo.png">
+    <meta property="og:image" content="<?= IMAGES_URL ?>logo_motorgo.png">
     <meta property="og:type" content="website">
     <title>MotorGo – Invista em Veículos</title>
-    <link rel="icon" type="image/png" href="imagens/logo_motorgo.png">
+    <link rel="icon" type="image/png" href="/imagens/logo_motorgo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="css/main.css">
     <style>
@@ -662,7 +662,7 @@ $nomeUsuario = $loggedIn ? htmlspecialchars($_SESSION['nome'] ?? '', ENT_QUOTES,
 <header class="navbar" id="navbar">
     <div class="navbar-inner">
         <a href="index.php" class="navbar-logo">
-            <img src="imagens/logo_motorgo.png" alt="MotorGo">
+            <img src="/imagens/logo_motorgo.png" alt="MotorGo">
         </a>
         <nav class="navbar-nav">
             <a href="#como-funciona">Como Funciona</a>
@@ -866,7 +866,7 @@ $nomeUsuario = $loggedIn ? htmlspecialchars($_SESSION['nome'] ?? '', ENT_QUOTES,
     <div class="footer-inner">
         <div class="footer-top">
             <div class="footer-brand">
-                <img src="imagens/logo_motorgo.png" alt="MotorGo" style="filter:brightness(0) invert(1);">
+                <img src="/imagens/logo_motorgo.png" alt="MotorGo" style="filter:brightness(0) invert(1);">
                 <p>A plataforma inteligente para investir em veículos com segurança, transparência e rentabilidade.</p>
                 <div class="footer-social">
                     <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>

@@ -226,8 +226,8 @@ const STATUS_LABELS = {
 function renderVehicleCard(vehicle) {
   const statusInfo = STATUS_LABELS[vehicle.status] ?? { label: vehicle.status, class: 'badge--neutral' };
   const foto       = vehicle.foto_principal
-    ? `uploads/${vehicle.foto_principal}`
-    : 'imagens/car-placeholder.png';
+    ? `/uploads/${vehicle.foto_principal}`
+    : '/imagens/car-placeholder.png';
 
   const preco      = typeof vehicle.preco === 'string'
     ? parseFloat(vehicle.preco)
@@ -244,7 +244,7 @@ function renderVehicleCard(vehicle) {
           alt="${vehicle.marca} ${vehicle.modelo}"
           class="vehicle-card__image"
           loading="lazy"
-          onerror="this.src='imagens/car-placeholder.png'"
+          onerror="this.src='/imagens/car-placeholder.png'"
         >
         <span class="badge ${statusInfo.class} vehicle-card__status-badge">
           ${statusInfo.label}
@@ -361,7 +361,7 @@ async function loadVehicles(filters = {}, page = 1) {
   if (!veiculos.length) {
     container.innerHTML = `
       <div class="empty-state">
-        <img src="imagens/empty-vehicles.svg" alt="" aria-hidden="true" class="empty-state__img">
+        <img src="/imagens/empty-vehicles.svg" alt="" aria-hidden="true" class="empty-state__img">
         <h3>Nenhum veículo encontrado</h3>
         <p>Tente ajustar os filtros ou cadastre um novo veículo.</p>
       </div>
@@ -598,7 +598,7 @@ async function editVehicle(vehicleId) {
   if (photoGrid && Array.isArray(v.fotos)) {
     photoGrid.innerHTML = v.fotos.map((foto, i) => `
       <div class="photo-thumb" data-foto-id="${foto.id}">
-        <img src="uploads/${foto.nome}" alt="Foto ${i + 1}" loading="lazy">
+        <img src="/uploads/${foto.nome}" alt="Foto ${i + 1}" loading="lazy">
         ${i === 0 ? '<span class="photo-thumb__badge">Principal</span>' : ''}
         <button type="button" class="photo-thumb__remove"
           onclick="MotorGoVeiculos.removeFoto(${foto.id}, this)"

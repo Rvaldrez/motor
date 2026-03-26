@@ -16,7 +16,7 @@ $csrfToken = generateCsrfToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>MotorGo – Entrar</title>
-    <link rel="icon" type="image/png" href="imagens/logo_motorgo.png">
+    <link rel="icon" type="image/png" href="/imagens/logo_motorgo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="css/main.css">
     <style>
@@ -354,7 +354,7 @@ $csrfToken = generateCsrfToken();
     <!-- Left Panel -->
     <div class="auth-left">
         <div class="auth-left-logo">
-            <img src="imagens/logo_motorgo_blk.png" alt="MotorGo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <img src="/imagens/logo_motorgo_blk.png" alt="MotorGo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
             <span style="display:none;font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:-0.04em;">Motor<span style="color:#e87070;">Go</span></span>
         </div>
         <div class="auth-left-body">

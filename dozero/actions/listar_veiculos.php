@@ -105,7 +105,7 @@ $upload_url = UPLOAD_URL;
 foreach ($veiculos as $v):
     $foto = $v['foto_principal']
         ? htmlspecialchars($upload_url . $v['foto_principal'], ENT_QUOTES, 'UTF-8')
-        : '../imagens/sem-foto.png';
+        : '/imagens/sem-foto.png';
     $preco = formatMoney((float) $v['preco']);
     $em_neg = $v['em_negociacao'] ? '<span class="badge bg-warning text-dark">Em negociação</span>' : '';
 ?>

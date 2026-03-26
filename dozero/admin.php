@@ -266,7 +266,7 @@ function admin_paginationHtml(int $current, int $total, string $secao, array $ex
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>MotorGo Admin – <?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="icon" type="image/png" href="imagens/logo_motorgo.png">
+    <link rel="icon" type="image/png" href="/imagens/logo_motorgo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/dashboard.css">
@@ -425,7 +425,7 @@ function admin_paginationHtml(int $current, int $total, string $secao, array $ex
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo-area" style="background:rgba(178,34,34,0.15);">
-            <img src="imagens/logo_motorgo.png" alt="MotorGo" class="sidebar-logo-img" onerror="this.style.display='none'">
+            <img src="/imagens/logo_motorgo.png" alt="MotorGo" class="sidebar-logo-img" onerror="this.style.display='none'">
             <span class="sidebar-logo-wordmark">Motor<em>Go</em> <span style="font-size:0.625rem;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:4px;font-weight:600;letter-spacing:0.08em;">ADMIN</span></span>
         </div>
 

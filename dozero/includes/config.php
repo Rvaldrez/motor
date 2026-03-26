@@ -53,16 +53,18 @@ define('EMAIL_SMTP_USER',  $_ENV['EMAIL_USUARIO'] ?? '');
 define('EMAIL_SMTP_PASS',  $_ENV['EMAIL_SENHA']   ?? '');
 define('EMAIL_SMTP_PORT',  465);
 
-// ── Uploads ───────────────────────────────────────────────────
-// LEGACY_PHOTO_BASE_URL aponta para a RAIZ do domínio (scheme+host sem subpasta)
-// porque o sistema antigo armazena fotos em motorgo.co/uploads/fotos_veiculos/...
-// independente da subpasta onde o novo sistema está instalado (ex.: /nw).
+// ── Uploads & Imagens ─────────────────────────────────────────
+// LEGACY_PHOTO_BASE_URL, UPLOAD_URL e IMAGES_URL apontam para a RAIZ do domínio
+// (scheme+host sem subpasta), pois as pastas uploads/ e imagens/ ficam em
+// public_html/ — independente da subpasta onde o novo sistema está (ex.: /nw).
 define('LEGACY_PHOTO_BASE_URL', $_ENV['LEGACY_PHOTO_BASE_URL'] ?? $_siteOrigin);
+define('UPLOAD_URL', LEGACY_PHOTO_BASE_URL . '/uploads/');
+define('IMAGES_URL', LEGACY_PHOTO_BASE_URL . '/imagens/');
 unset($_siteScheme, $_siteHost, $_siteOrigin, $_basePath);
 
-// Pasta de uploads do novo sistema (filesystem) e URL correspondente
-define('UPLOAD_DIR', __DIR__ . '/../uploads/');
-define('UPLOAD_URL', SITE_URL . '/uploads/');
+// UPLOAD_DIR: caminho de filesystem baseado no DOCUMENT_ROOT do servidor,
+// para sempre apontar para public_html/uploads/ independente da subpasta.
+define('UPLOAD_DIR', rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/uploads/');
 
 // ── Limites de Upload ─────────────────────────────────────────
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024); // 5 MB

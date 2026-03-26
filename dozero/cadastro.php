@@ -18,7 +18,7 @@ $csrfToken = $_SESSION['csrf_token'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>MotorGo – Criar Conta</title>
-    <link rel="icon" type="image/png" href="imagens/logo_motorgo.png">
+    <link rel="icon" type="image/png" href="/imagens/logo_motorgo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="css/main.css">
     <style>
@@ -418,7 +418,7 @@ $csrfToken = $_SESSION['csrf_token'];
     <!-- Header -->
     <div class="cad-header">
         <a href="index.php">
-            <img src="imagens/logo_motorgo.png" alt="MotorGo">
+            <img src="/imagens/logo_motorgo.png" alt="MotorGo">
         </a>
         <p>Crie sua conta e comece a investir</p>
     </div>
