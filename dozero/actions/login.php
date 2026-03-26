@@ -44,4 +44,4 @@ $user['foto']   = $user['foto']   ?? '';
 
 setUserSession($user);
 
-echo json_encode(['success' => true, 'message' => 'Login realizado!', 'redirect' => '../painel.php']);
+echo json_encode(['success' => true, 'message' => 'Login realizado!', 'redirect' => SITE_URL . '/painel.php']);

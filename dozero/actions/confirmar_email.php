@@ -91,4 +91,4 @@ $user['foto']   = $user['foto']   ?? '';
 
 setUserSession($user);
 
-echo json_encode(['success' => true, 'message' => 'E-mail confirmado com sucesso!', 'redirect' => '../painel.php']);
+echo json_encode(['success' => true, 'message' => 'E-mail confirmado com sucesso!', 'redirect' => SITE_URL . '/painel.php']);

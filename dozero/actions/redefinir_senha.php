@@ -47,4 +47,4 @@ $stmt->bind_param('si', $hash, $user['id']);
 $stmt->execute();
 $stmt->close();
 
-echo json_encode(['success' => true, 'message' => 'Senha redefinida com sucesso!', 'redirect' => '../login.php']);
+echo json_encode(['success' => true, 'message' => 'Senha redefinida com sucesso!', 'redirect' => SITE_URL . '/login.php']);

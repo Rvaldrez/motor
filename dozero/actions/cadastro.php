@@ -100,5 +100,5 @@ sendEmail($email, $nome, 'MotorGo – Confirme seu e-mail', $htmlBody);
 echo json_encode([
     'success'  => true,
     'message'  => 'Cadastro realizado! Verifique seu e-mail.',
-    'redirect' => '../confirmar_email.php?email=' . urlencode($email)
+    'redirect' => SITE_URL . '/confirmar_email.php?email=' . urlencode($email)
 ]);
