@@ -91,7 +91,7 @@ $flash = getFlashMessage();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>MotorGo – <?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="icon" type="image/png" href="/imagens/logo_motorgo.png">
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="css/main.css">
@@ -502,6 +502,8 @@ $flash = getFlashMessage();
             z-index: var(--z-modal);
             padding: 1rem;
             backdrop-filter: blur(4px);
+            opacity: 1;
+            visibility: visible;
         }
         .modal-box {
             background: #fff;
@@ -677,7 +679,6 @@ $flash = getFlashMessage();
         <div class="sidebar-logo-area">
             <img src="/imagens/logo_motorgo_blk.png" alt="MotorGo" class="sidebar-logo-img"
                  onerror="this.style.display='none'">
-            <span class="sidebar-logo-wordmark">Motor<em>Go</em></span>
         </div>
 
         <!-- User info -->

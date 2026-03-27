@@ -18,7 +18,7 @@ $nomeUsuario = $loggedIn ? htmlspecialchars($_SESSION['nome'] ?? '', ENT_QUOTES,
     <meta property="og:image" content="<?= IMAGES_URL ?>logo_motorgo.png">
     <meta property="og:type" content="website">
     <title>MotorGo – Invista em Veículos</title>
-    <link rel="icon" type="image/png" href="/imagens/logo_motorgo.png">
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="css/main.css">
     <style>
