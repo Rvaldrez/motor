@@ -389,6 +389,9 @@ function _renderFotoGaleria(fotos) {
         var item = document.createElement('div');
         item.className = 'foto-thumb-item' + (idx === 0 ? ' is-principal' : '');
         item.title = 'Clique para substituir esta foto';
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', (idx === 0 ? 'Foto principal – ' : 'Foto ' + (idx + 1) + ' – ') + 'clique para substituir');
 
         var img = document.createElement('img');
         img.src = f.url;
@@ -442,6 +445,9 @@ function _renderFotoGaleria(fotos) {
         item.appendChild(fileInput);
 
         item.addEventListener('click', function () { fileInput.click(); });
+        item.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+        });
 
         fileInput.addEventListener('change', function () {
             if (!this.files || !this.files[0]) return;
