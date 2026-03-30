@@ -21,8 +21,6 @@ $marca        = trim($_POST['marca']        ?? '');
 $modelo       = trim($_POST['modelo']       ?? '');
 $ano_fabrica  = (int) ($_POST['ano_fabrica']  ?? 0);
 $quilometragem = (int) ($_POST['quilometragem'] ?? 0);
-$preco_raw    = preg_replace('/[^\d,\.]/', '', $_POST['preco'] ?? '');
-$preco        = (float) str_replace(',', '.', str_replace('.', '', $preco_raw));
 $usuario_id   = (int) $_SESSION['usuario_id'];
 $tipo         = $_SESSION['tipo'] ?? '';
 
@@ -61,18 +59,17 @@ if (!preg_match('/^[A-Z]{3}[0-9]{1}[A-Z0-9]{1}[0-9]{2}$|^[A-Z]{3}[0-9]{4}$/', $p
 if ($marca === '')        $erros[] = 'Marca é obrigatória.';
 if ($modelo === '')       $erros[] = 'Modelo é obrigatório.';
 if ($ano_fabrica < 1900 || $ano_fabrica > (int) date('Y') + 1) $erros[] = 'Ano inválido.';
-if ($preco <= 0)          $erros[] = 'Preço inválido.';
 if (!empty($erros)) {
     echo json_encode(['success' => false, 'message' => implode(' ', $erros)]);
     exit;
 }
 
-$stmt = $conn->prepare("UPDATE veiculos SET placa=?, marca=?, modelo=?, ano_fabrica=?, quilometragem=?, preco=? WHERE id=?");
+$stmt = $conn->prepare("UPDATE veiculos SET placa=?, marca=?, modelo=?, ano_fabrica=?, quilometragem=? WHERE id=?");
 if (!$stmt) {
     echo json_encode(['success' => false, 'message' => APP_DEBUG ? 'Erro ao preparar UPDATE: ' . $conn->error : 'Erro ao atualizar veículo.']);
     exit;
 }
-$stmt->bind_param('sssiidi', $placa, $marca, $modelo, $ano_fabrica, $quilometragem, $preco, $id);
+$stmt->bind_param('sssiii', $placa, $marca, $modelo, $ano_fabrica, $quilometragem, $id);
 if (!$stmt->execute()) {
     $errMsg = APP_DEBUG ? 'Erro ao atualizar veículo: ' . $conn->error : 'Erro ao atualizar veículo.';
     $stmt->close();

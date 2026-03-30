@@ -373,15 +373,12 @@ function oferta_fotoUrl(string $path): string {
 
                 <div class="form-group">
                     <label class="form-label">Valor da Proposta (R$) <span class="req">*</span></label>
-                    <input type="number" name="valor" id="propostaValor" class="form-control"
-                           placeholder="Ex.: 42000" min="1" step="0.01" required>
-                    <small style="color:var(--color-text-muted);font-size:0.8rem;">Informe o valor que deseja pagar pelo veículo.</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Mensagem (opcional)</label>
-                    <textarea name="mensagem" id="propostaMensagem" class="form-control"
-                              rows="3" placeholder="Informações adicionais sobre sua proposta…"
-                              maxlength="500" style="resize:vertical;"></textarea>
+                    <input type="text" name="valor" id="propostaValor" class="form-control"
+                           placeholder="Ex.: R$ 42.000,00" required inputmode="numeric">
+                    <div class="alert-box alert-warning" style="margin-top:0.625rem;font-size:0.82rem;padding:0.6rem 0.875rem;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>O valor acima é sugerido com base na tabela FIPE. Faça sua própria pesquisa para saber qual é o valor ideal para você obter lucro na venda.</span>
+                    </div>
                 </div>
             </form>
         </div>
@@ -707,13 +704,27 @@ document.addEventListener('keydown', function (e) {
 });
 
 /* ── Modal de Proposta ───────────────────────────────── */
+function _formatBRL(value) {
+    return 'R$ ' + Number(value).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+function _parseBRL(str) {
+    return parseFloat((str || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+}
+function _applyMoedaMask(input) {
+    input.addEventListener('input', function () {
+        var digits = this.value.replace(/\D/g, '');
+        if (!digits) { this.value = ''; return; }
+        var num = parseInt(digits, 10) / 100;
+        this.value = _formatBRL(num);
+    });
+}
+
 function abrirModalProposta(id, nome, precoFipe, precoSugerido) {
     document.getElementById('propostaVeiculoId').value = id;
     document.getElementById('propostaVeiculoNome').textContent = nome;
     document.getElementById('propostaVeiculoPreco').textContent =
-        'Preço sugerido: R$ ' + precoSugerido.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    document.getElementById('propostaValor').value = precoSugerido;
-    document.getElementById('propostaMensagem').value = '';
+        'Preço sugerido: ' + _formatBRL(precoSugerido);
+    document.getElementById('propostaValor').value = _formatBRL(precoSugerido);
     document.getElementById('propostaError').style.display = 'none';
     document.getElementById('propostaSucesso').style.display = 'none';
     document.getElementById('formProposta').style.display = '';
@@ -722,23 +733,29 @@ function abrirModalProposta(id, nome, precoFipe, precoSugerido) {
     document.getElementById('modalProposta').style.display = 'flex';
 }
 
+// Apply mask once DOM is ready
+_applyMoedaMask(document.getElementById('propostaValor'));
+
 function fecharModalProposta() {
     document.getElementById('modalProposta').style.display = 'none';
 }
 
 document.getElementById('btnEnviarProposta').addEventListener('click', function () {
-    var valor = document.getElementById('propostaValor');
-    if (!valor.value || parseFloat(valor.value) <= 0) {
-        valor.classList.add('is-invalid');
+    var valorInput = document.getElementById('propostaValor');
+    var valorNum   = _parseBRL(valorInput.value);
+    if (!valorNum || valorNum <= 0) {
+        valorInput.classList.add('is-invalid');
         return;
     }
-    valor.classList.remove('is-invalid');
+    valorInput.classList.remove('is-invalid');
 
     var btn = this;
     btn.disabled = true;
     btn.classList.add('loading');
 
     var formData = new FormData(document.getElementById('formProposta'));
+    // Ensure raw numeric value is sent (PHP sanitizes anyway, but cleaner)
+    formData.set('valor', valorNum.toFixed(2));
 
     fetch('actions/enviar_proposta.php', { method: 'POST', body: formData })
         .then(function (r) { return r.json(); })

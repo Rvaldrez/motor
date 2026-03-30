@@ -223,7 +223,6 @@ function veiculo_fotoUrl(string $path): string {
                         <th>Veículo</th>
                         <th>Ano</th>
                         <th>Km</th>
-                        <th>Preço</th>
                         <th>Status</th>
                         <th>Cadastrado</th>
                         <th>Ações</th>
@@ -256,7 +255,6 @@ function veiculo_fotoUrl(string $path): string {
                         </td>
                         <td><?= htmlspecialchars($v['ano_fabrica'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= $v['quilometragem'] !== null ? number_format((int)$v['quilometragem'], 0, ',', '.') . ' km' : '-' ?></td>
-                        <td style="font-weight:600;"><?= formatMoney((float)($v['preco'] ?? 0)) ?></td>
                         <td><?= veiculos_statusBadge($v['status'] ?? 'pendente') ?></td>
                         <td style="color:var(--color-text-muted);font-size:0.8125rem;">
                             <?= !empty($v['data_cadastro']) ? date('d/m/Y', strtotime($v['data_cadastro'])) : '-' ?>
@@ -353,14 +351,16 @@ function veiculo_fotoUrl(string $path): string {
                         <label class="form-label">Quilometragem <span class="req">*</span></label>
                         <input type="number" name="quilometragem" id="inputKm" class="form-control" placeholder="50000" min="0" required>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Preço (R$) <span class="req">*</span></label>
-                        <input type="number" name="preco" id="inputPreco" class="form-control" placeholder="45000" min="0" step="0.01" required>
-                    </div>
+                </div>
+
+                <!-- Existing photos (edit mode only) -->
+                <div id="fotoGaleriaContainer" style="display:none;margin-bottom:1rem;">
+                    <label class="form-label" style="display:block;margin-bottom:0.5rem;">Fotos Atuais <span style="font-size:0.8rem;color:var(--color-text-muted);font-weight:400;">(clique para substituir)</span></label>
+                    <div id="fotoGaleriaGrid" class="foto-thumb-grid"></div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Fotos do Veículo</label>
+                    <label class="form-label">Adicionar Fotos</label>
                     <input type="file" name="fotos[]" id="inputFotos" class="form-control" multiple accept="image/jpeg,image/png,image/webp">
                     <small style="color:var(--color-text-muted);font-size:0.8rem;">Máximo 5MB por foto. Formatos: JPG, PNG, WebP.</small>
                 </div>
@@ -377,11 +377,103 @@ function veiculo_fotoUrl(string $path): string {
 </div>
 
 <script>
+/* ── Photo thumbnail helpers ──────────────────────────── */
+function _renderFotoGaleria(fotos) {
+    var container = document.getElementById('fotoGaleriaContainer');
+    var grid      = document.getElementById('fotoGaleriaGrid');
+    grid.innerHTML = '';
+    if (!fotos || fotos.length === 0) { container.style.display = 'none'; return; }
+    fotos.sort(function (a, b) { return a.ordem_exibicao - b.ordem_exibicao; });
+    container.style.display = '';
+    fotos.forEach(function (f, idx) {
+        var item = document.createElement('div');
+        item.className = 'foto-thumb-item' + (idx === 0 ? ' is-principal' : '');
+        item.title = 'Clique para substituir esta foto';
+
+        var img = document.createElement('img');
+        img.src = f.url;
+        img.alt = 'Foto ' + (idx + 1);
+        img.className = 'foto-thumb-img';
+        item.appendChild(img);
+
+        if (idx === 0) {
+            var badge = document.createElement('span');
+            badge.className = 'foto-thumb-badge';
+            badge.textContent = 'PRINCIPAL';
+            item.appendChild(badge);
+        }
+
+        var del = document.createElement('button');
+        del.className = 'foto-thumb-delete';
+        del.type = 'button';
+        del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        del.title = 'Remover foto';
+        del.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!confirm('Remover esta foto?')) return;
+            var hi = document.createElement('input');
+            hi.type  = 'hidden';
+            hi.name  = 'fotos_remover[]';
+            hi.value = f.id;
+            document.getElementById('formVeiculo').appendChild(hi);
+            item.remove();
+            // Update principal badge on remaining items
+            var remaining = grid.querySelectorAll('.foto-thumb-item');
+            remaining.forEach(function (el, i) {
+                el.classList.toggle('is-principal', i === 0);
+                var b = el.querySelector('.foto-thumb-badge');
+                if (i === 0 && !b) {
+                    var nb = document.createElement('span');
+                    nb.className = 'foto-thumb-badge';
+                    nb.textContent = 'PRINCIPAL';
+                    el.appendChild(nb);
+                } else if (i > 0 && b) { b.remove(); }
+            });
+        });
+        item.appendChild(del);
+
+        // Hidden per-photo file input
+        var fileInput = document.createElement('input');
+        fileInput.type   = 'file';
+        fileInput.accept = 'image/jpeg,image/png,image/webp';
+        fileInput.style.display = 'none';
+        fileInput.dataset.fotoId    = f.id;
+        fileInput.dataset.veiculoId = document.getElementById('veiculoId').value;
+        item.appendChild(fileInput);
+
+        item.addEventListener('click', function () { fileInput.click(); });
+
+        fileInput.addEventListener('change', function () {
+            if (!this.files || !this.files[0]) return;
+            var fd = new FormData();
+            fd.append('csrf_token',  '<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>');
+            fd.append('foto_id',     this.dataset.fotoId);
+            fd.append('veiculo_id',  document.getElementById('veiculoId').value);
+            fd.append('foto',        this.files[0]);
+            item.style.opacity = '0.5';
+            fetch('actions/trocar_foto.php', { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    item.style.opacity = '1';
+                    if (d.success && d.url) { img.src = d.url + '?t=' + Date.now(); }
+                    else { alert(d.message || 'Erro ao substituir foto.'); }
+                })
+                .catch(function () { item.style.opacity = '1'; alert('Erro ao substituir foto.'); });
+        });
+
+        grid.appendChild(item);
+    });
+}
+
 function abrirModalVeiculo() {
     document.getElementById('modalVeiculoTitle').textContent = 'Cadastrar Veículo';
     document.getElementById('formVeiculo').reset();
     document.getElementById('veiculoId').value = '';
     document.getElementById('modalVeiculoError').style.display = 'none';
+    document.getElementById('fotoGaleriaContainer').style.display = 'none';
+    document.getElementById('fotoGaleriaGrid').innerHTML = '';
+    // Remove any leftover fotos_remover hidden inputs
+    document.querySelectorAll('#formVeiculo input[name="fotos_remover[]"]').forEach(function (el) { el.remove(); });
     document.getElementById('modalVeiculo').style.display = 'flex';
 }
 
@@ -395,6 +487,9 @@ function editarVeiculo(id) {
     document.getElementById('modalVeiculoError').style.display = 'none';
     document.getElementById('formVeiculo').reset();
     document.getElementById('veiculoId').value = id;
+    document.getElementById('fotoGaleriaContainer').style.display = 'none';
+    document.getElementById('fotoGaleriaGrid').innerHTML = '';
+    document.querySelectorAll('#formVeiculo input[name="fotos_remover[]"]').forEach(function (el) { el.remove(); });
     document.getElementById('modalVeiculo').style.display = 'flex';
 
     fetch('actions/carregar_veiculo.php?id=' + id)
@@ -405,18 +500,18 @@ function editarVeiculo(id) {
         .then(function (data) {
             if (data.success && data.data) {
                 var v = data.data;
-                document.getElementById('inputPlaca').value   = v.placa || '';
-                document.getElementById('inputMarca').value   = v.marca || '';
+                document.getElementById('inputPlaca').value   = v.placa  || '';
+                document.getElementById('inputMarca').value   = v.marca  || '';
                 document.getElementById('inputModelo').value  = v.modelo || '';
-                document.getElementById('inputAno').value     = v.ano_fabrica || '';
-                document.getElementById('inputKm').value      = v.quilometragem || '';
-                document.getElementById('inputPreco').value   = v.preco || '';
+                document.getElementById('inputAno').value     = v.ano_fabrica    || '';
+                document.getElementById('inputKm').value      = v.quilometragem  || '';
+                if (v.fotos && v.fotos.length > 0) { _renderFotoGaleria(v.fotos); }
             } else {
                 document.getElementById('modalVeiculoErrorMsg').textContent = (data && data.message) ? data.message : 'Erro ao carregar dados do veículo.';
                 document.getElementById('modalVeiculoError').style.display = 'flex';
             }
         })
-        .catch(function (err) {
+        .catch(function () {
             document.getElementById('modalVeiculoErrorMsg').textContent = 'Erro de conexão ao carregar veículo.';
             document.getElementById('modalVeiculoError').style.display = 'flex';
         });
@@ -430,11 +525,8 @@ function removerVeiculo(id, nome) {
     fetch('actions/remover_veiculo.php', { method: 'POST', body: fd })
         .then(function (r) { return r.json(); })
         .then(function (data) {
-            if (data.success) {
-                window.location.href = '?secao=veiculos';
-            } else {
-                alert(data.message || 'Erro ao remover veículo.');
-            }
+            if (data.success) { window.location.href = '?secao=veiculos'; }
+            else { alert(data.message || 'Erro ao remover veículo.'); }
         });
 }
 
@@ -445,14 +537,11 @@ if (btnNovoEmpty) btnNovoEmpty.addEventListener('click', abrirModalVeiculo);
 
 document.getElementById('btnSalvarVeiculo').addEventListener('click', function (e) {
     e.preventDefault();
-    var form = document.getElementById('formVeiculo');
+    var form   = document.getElementById('formVeiculo');
     var inputs = form.querySelectorAll('[required]');
-    var valid = true;
+    var valid  = true;
     inputs.forEach(function (input) {
-        if (!input.value.trim()) {
-            input.classList.add('is-invalid');
-            valid = false;
-        }
+        if (!input.value.trim()) { input.classList.add('is-invalid'); valid = false; }
     });
     if (!valid) return;
 
@@ -461,8 +550,8 @@ document.getElementById('btnSalvarVeiculo').addEventListener('click', function (
     btn.classList.add('loading');
 
     var formData = new FormData(form);
-    var isEdit = !!document.getElementById('veiculoId').value;
-    var url = isEdit ? 'actions/editar_veiculo.php' : 'actions/salvar_veiculo.php';
+    var isEdit   = !!document.getElementById('veiculoId').value;
+    var url      = isEdit ? 'actions/editar_veiculo.php' : 'actions/salvar_veiculo.php';
 
     fetch(url, { method: 'POST', body: formData })
         .then(function (r) {
@@ -494,3 +583,66 @@ document.getElementById('modalVeiculo').addEventListener('click', function (e) {
     if (e.target === this) fecharModalVeiculo();
 });
 </script>
+
+<style>
+/* ── Photo thumbnail grid ──────────────────────────────── */
+.foto-thumb-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+}
+.foto-thumb-item {
+    position: relative;
+    width: 90px;
+    height: 68px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid var(--color-border);
+    transition: border-color 0.2s;
+    flex-shrink: 0;
+}
+.foto-thumb-item:hover { border-color: var(--color-primary); }
+.foto-thumb-item.is-principal { border-color: #10b981; }
+.foto-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+.foto-thumb-badge {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(16, 185, 129, 0.88);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 2px 0;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+}
+.foto-thumb-delete {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: rgba(220, 38, 38, 0.85);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    z-index: 2;
+}
+.foto-thumb-delete:hover { background: rgba(185, 28, 28, 1); }
+</style>
