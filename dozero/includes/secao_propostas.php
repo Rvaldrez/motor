@@ -28,8 +28,8 @@ if ($tipo === 'vendedor') {
         INNER JOIN usuarios u ON u.id = p.usuario_id
         WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
     ";
-    $baseParams = [$userId, $userId];
-    $baseTypes  = 'ii';
+    $baseParams = [$userId];
+    $baseTypes  = 'i';
     $sectionTitle = 'Propostas';
     $contraparteLabel = 'Comprador';
 
@@ -50,8 +50,8 @@ if ($tipo === 'vendedor') {
         INNER JOIN usuarios u ON u.id = v.usuario_id
         WHERE p.usuario_id = ? AND p.proposta_origem_id IS NULL
     ";
-    $baseParams = [$userId, $userId];
-    $baseTypes  = 'ii';
+    $baseParams = [$userId];
+    $baseTypes  = 'i';
     $sectionTitle = 'Minhas Propostas';
     $contraparteLabel = 'Vendedor';
 
