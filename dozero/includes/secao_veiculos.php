@@ -406,35 +406,6 @@ function _renderFotoGaleria(fotos) {
             item.appendChild(badge);
         }
 
-        var del = document.createElement('button');
-        del.className = 'foto-thumb-delete';
-        del.type = 'button';
-        del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-        del.title = 'Remover foto';
-        del.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (!confirm('Remover esta foto?')) return;
-            var hi = document.createElement('input');
-            hi.type  = 'hidden';
-            hi.name  = 'fotos_remover[]';
-            hi.value = f.id;
-            document.getElementById('formVeiculo').appendChild(hi);
-            item.remove();
-            // Update principal badge on remaining items
-            var remaining = grid.querySelectorAll('.foto-thumb-item');
-            remaining.forEach(function (el, i) {
-                el.classList.toggle('is-principal', i === 0);
-                var b = el.querySelector('.foto-thumb-badge');
-                if (i === 0 && !b) {
-                    var nb = document.createElement('span');
-                    nb.className = 'foto-thumb-badge';
-                    nb.textContent = 'PRINCIPAL';
-                    el.appendChild(nb);
-                } else if (i > 0 && b) { b.remove(); }
-            });
-        });
-        item.appendChild(del);
-
         // Hidden per-photo file input
         var fileInput = document.createElement('input');
         fileInput.type   = 'file';

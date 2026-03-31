@@ -374,10 +374,10 @@ function oferta_fotoUrl(string $path): string {
                 <div class="form-group">
                     <label class="form-label">Valor da Proposta (R$) <span class="req">*</span></label>
                     <input type="text" name="valor" id="propostaValor" class="form-control"
-                           placeholder="Ex.: R$ 42.000,00" required inputmode="numeric">
+                           placeholder="Digite o valor" required inputmode="numeric">
                     <div class="alert-box alert-warning" style="display:flex;margin-top:0.625rem;font-size:0.82rem;padding:0.6rem 0.875rem;">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>O valor acima é sugerido com base na tabela FIPE. Faça sua própria pesquisa para saber qual é o valor ideal para você obter lucro na venda.</span>
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:1.25rem;flex-shrink:0;"></i>
+                        <span>Valor sugerido baseado no mercado. Faça sua própria pesquisa para definir o preço ideal e lucrar.</span>
                     </div>
                 </div>
             </form>
@@ -724,7 +724,7 @@ function abrirModalProposta(id, nome, precoFipe, precoSugerido) {
     document.getElementById('propostaVeiculoNome').textContent = nome;
     document.getElementById('propostaVeiculoPreco').textContent =
         'Preço sugerido: ' + _formatBRL(precoSugerido);
-    document.getElementById('propostaValor').value = _formatBRL(precoSugerido);
+    document.getElementById('propostaValor').value = '';
     document.getElementById('propostaError').style.display = 'none';
     document.getElementById('propostaSucesso').style.display = 'none';
     document.getElementById('formProposta').style.display = '';
