@@ -359,8 +359,8 @@ function veiculo_fotoUrl(string $path): string {
                     <div id="fotoGaleriaGrid" class="foto-thumb-grid"></div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Adicionar Fotos</label>
+                <div class="form-group" id="addFotosGroup">
+                    <label class="form-label">Fotos</label>
                     <input type="file" name="fotos[]" id="inputFotos" class="form-control" multiple accept="image/jpeg,image/png,image/webp">
                     <small style="color:var(--color-text-muted);font-size:0.8rem;">Máximo 5MB por foto. Formatos: JPG, PNG, WebP.</small>
                 </div>
@@ -480,6 +480,7 @@ function abrirModalVeiculo() {
     document.getElementById('fotoGaleriaGrid').innerHTML = '';
     // Remove any leftover fotos_remover hidden inputs
     document.querySelectorAll('#formVeiculo input[name="fotos_remover[]"]').forEach(function (el) { el.remove(); });
+    document.getElementById('addFotosGroup').style.display = '';
     document.getElementById('modalVeiculo').style.display = 'flex';
 }
 
@@ -496,6 +497,7 @@ function editarVeiculo(id) {
     document.getElementById('fotoGaleriaContainer').style.display = 'none';
     document.getElementById('fotoGaleriaGrid').innerHTML = '';
     document.querySelectorAll('#formVeiculo input[name="fotos_remover[]"]').forEach(function (el) { el.remove(); });
+    document.getElementById('addFotosGroup').style.display = 'none';
     document.getElementById('modalVeiculo').style.display = 'flex';
 
     fetch('actions/carregar_veiculo.php?id=' + id)

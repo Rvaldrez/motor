@@ -375,7 +375,7 @@ function oferta_fotoUrl(string $path): string {
                     <label class="form-label">Valor da Proposta (R$) <span class="req">*</span></label>
                     <input type="text" name="valor" id="propostaValor" class="form-control"
                            placeholder="Ex.: R$ 42.000,00" required inputmode="numeric">
-                    <div class="alert-box alert-warning" style="margin-top:0.625rem;font-size:0.82rem;padding:0.6rem 0.875rem;">
+                    <div class="alert-box alert-warning" style="display:flex;margin-top:0.625rem;font-size:0.82rem;padding:0.6rem 0.875rem;">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>O valor acima é sugerido com base na tabela FIPE. Faça sua própria pesquisa para saber qual é o valor ideal para você obter lucro na venda.</span>
                     </div>

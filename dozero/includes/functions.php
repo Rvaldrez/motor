@@ -274,7 +274,7 @@ function resolvePhotoUrl(string $path): string
 {
     if ($path === '') return '';
     if (strncmp($path, 'uploads/', 8) === 0) {
-        return SITE_URL . '/' . $path;
+        return LEGACY_PHOTO_BASE_URL . '/' . $path;
     }
     return UPLOAD_URL . $path;
 }
