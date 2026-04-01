@@ -20,8 +20,7 @@ if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
 }
 
 $veiculo_id  = (int) ($_POST['veiculo_id'] ?? 0);
-$valor_raw   = preg_replace('/[^\d,\.]/', '', $_POST['valor'] ?? '');
-$valor       = (float) str_replace(',', '.', str_replace('.', '', $valor_raw));
+$valor       = parseCurrency($_POST['valor'] ?? '');
 $mensagem    = trim($_POST['mensagem'] ?? '');
 $usuario_id  = (int) $_SESSION['usuario_id'];
 
@@ -88,15 +87,18 @@ $stmt->close();
 
 // Notifica vendedor
 $investidor_nome = $_SESSION['nome'] ?? 'Investidor';
-$htmlBody = "
-<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'>
-  <h2 style='color:#1a1a2e'>Nova proposta recebida – MotorGo</h2>
-  <p>Olá, {$veiculo['vendedor_nome']}! Você recebeu uma nova proposta.</p>
-  <p><strong>Investidor:</strong> {$investidor_nome}</p>
-  <p><strong>Valor:</strong> " . formatMoney($valor) . "</p>
-  " . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "
-  <p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Ver proposta no painel</a></p>
-</div>";
+$emailBody = "<p>Olá, <strong>" . htmlspecialchars($veiculo['vendedor_nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>Você recebeu uma nova proposta para o seu veículo.</p>
+<table cellpadding='0' cellspacing='0' style='margin:16px 0;'>
+  <tr><td style='padding:5px 0;color:#6b7280;min-width:120px;'>Investidor</td>
+      <td style='padding:5px 0;font-weight:bold;'>" . htmlspecialchars($investidor_nome, ENT_QUOTES, 'UTF-8') . "</td></tr>
+  <tr><td style='padding:5px 0;color:#6b7280;'>Valor ofertado</td>
+      <td style='padding:5px 0;font-weight:bold;color:#e63946;font-size:18px;'>" . formatMoney($valor) . "</td></tr>
+" . ($mensagem !== '' ? "  <tr><td style='padding:5px 0;color:#6b7280;vertical-align:top;'>Mensagem</td>
+      <td style='padding:5px 0;font-style:italic;'>\"" . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "\"</td></tr>" : '') . "
+</table>
+<p style='color:#6b7280;font-size:13px;'>Acesse o painel para aceitar, recusar ou enviar uma contraproposta.</p>";
+$htmlBody = buildEmailHtml('Nova proposta recebida', $emailBody, 'Ver proposta no painel', SITE_URL . '/painel.php?secao=propostas');
 sendEmail($veiculo['vendedor_email'], $veiculo['vendedor_nome'], 'MotorGo – Nova proposta recebida', $htmlBody);
 
 echo json_encode(['success' => true, 'message' => 'Proposta enviada com sucesso!']);

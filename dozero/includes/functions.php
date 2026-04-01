@@ -26,6 +26,80 @@ function formatMoney(float $value): string
 }
 
 /**
+ * Converte valor monetário para float.
+ * Aceita formato brasileiro (1.234,56) ou decimal (1234.56 enviado pelo JS).
+ */
+function parseCurrency(string $raw): float
+{
+    $raw = trim($raw);
+    if (strpos($raw, ',') !== false) {
+        // Formato brasileiro: remover pontos de milhar, trocar vírgula por ponto
+        return (float) str_replace(',', '.', str_replace('.', '', preg_replace('/[^\d,]/', '', $raw)));
+    }
+    // Formato decimal (JS envia toFixed(2))
+    return (float) preg_replace('/[^\d.]/', '', $raw);
+}
+
+/**
+ * Gera HTML de e-mail transacional padronizado MotorGo.
+ * $body deve ser HTML interno (parágrafos, tabelas etc.).
+ */
+function buildEmailHtml(string $title, string $body, string $btnText = '', string $btnUrl = ''): string
+{
+    $primary = '#e63946';
+    $btn = '';
+    if ($btnText !== '' && $btnUrl !== '') {
+        $btn = "<tr><td align='center' style='padding:8px 0 24px;'>"
+             . "<a href='" . htmlspecialchars($btnUrl, ENT_QUOTES, 'UTF-8') . "' "
+             . "style='display:inline-block;background:{$primary};color:#fff;text-decoration:none;"
+             . "padding:12px 28px;border-radius:6px;font-weight:bold;font-size:15px;'>"
+             . htmlspecialchars($btnText, ENT_QUOTES, 'UTF-8') . "</a></td></tr>";
+    }
+    return "<!DOCTYPE html>
+<html lang='pt-BR'>
+<head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head>
+<body style='margin:0;padding:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;'>
+<table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f5f7;padding:32px 16px;'>
+  <tr><td align='center'>
+    <table width='600' cellpadding='0' cellspacing='0'
+           style='background:#ffffff;border-radius:10px;overflow:hidden;
+                  box-shadow:0 2px 12px rgba(0,0,0,0.10);max-width:600px;width:100%;'>
+      <!-- HEADER -->
+      <tr>
+        <td style='background:{$primary};padding:24px 32px;text-align:center;'>
+          <h1 style='color:#fff;margin:0;font-size:26px;font-weight:bold;letter-spacing:1px;'>MotorGo</h1>
+          <p style='color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px;'>Plataforma de compra e venda de veículos</p>
+        </td>
+      </tr>
+      <!-- TÍTULO -->
+      <tr>
+        <td style='padding:28px 32px 12px;border-bottom:2px solid #f0f0f0;'>
+          <h2 style='margin:0;color:#1a1a2e;font-size:20px;font-weight:bold;'>" . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . "</h2>
+        </td>
+      </tr>
+      <!-- BODY -->
+      <tr>
+        <td style='padding:24px 32px 8px;color:#374151;font-size:15px;line-height:1.6;'>
+          {$body}
+        </td>
+      </tr>
+      <!-- BOTÃO -->
+      {$btn}
+      <!-- FOOTER -->
+      <tr>
+        <td style='padding:16px 32px;background:#f8f9fa;border-top:1px solid #e5e7eb;text-align:center;'>
+          <p style='margin:0;color:#9ca3af;font-size:12px;'>
+            &copy; " . date('Y') . " MotorGo &mdash; Este é um e-mail automático, não responda.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>";
+}
+
+/**
  * Formata número de telefone: (11) 99999-9999 ou (11) 9999-9999
  */
 function formatPhone(string $phone): string

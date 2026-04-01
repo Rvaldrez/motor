@@ -17,8 +17,7 @@ if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
 
 $proposta_id  = (int) ($_POST['proposta_id'] ?? 0);
 $acao         = trim($_POST['acao']          ?? '');
-$novo_valor_r = preg_replace('/[^\d,\.]/', '', $_POST['novo_valor'] ?? '');
-$novo_valor   = (float) str_replace(',', '.', str_replace('.', '', $novo_valor_r));
+$novo_valor   = parseCurrency($_POST['novo_valor'] ?? '');
 $mensagem     = trim($_POST['mensagem']      ?? '');
 $usuario_id   = (int) $_SESSION['usuario_id'];
 $tipo         = $_SESSION['tipo'] ?? '';
@@ -33,8 +32,8 @@ if ($proposta_id <= 0 || !in_array($acao, $acoes_validas, true)) {
 $stmt = $conn->prepare(
     "SELECT p.id, p.veiculo_id, p.usuario_id AS prop_usuario_id, p.valor, p.status, p.proposta_origem_id,
             v.usuario_id AS vendedor_id,
-            u_prop.nome AS prop_usuario_nome, u_prop.email AS prop_usuario_email,
-            u_vend.nome AS vendedor_nome, u_vend.email AS vendedor_email
+            u_prop.nome AS prop_usuario_nome, u_prop.email AS prop_usuario_email, u_prop.celular AS prop_usuario_celular,
+            u_vend.nome AS vendedor_nome, u_vend.email AS vendedor_email, u_vend.celular AS vendedor_celular
      FROM propostas p
      JOIN veiculos v ON v.id = p.veiculo_id
      JOIN usuarios u_prop ON u_prop.id = p.usuario_id
@@ -89,31 +88,77 @@ if ($isVendedor && !$isComprador) {
 
     // Helper: who to notify (original buyer of the root proposal)
     $stmtBuyer = $conn->prepare(
-        "SELECT u.nome, u.email FROM propostas p JOIN usuarios u ON u.id = p.usuario_id WHERE p.id = ? LIMIT 1"
+        "SELECT u.nome, u.email, u.celular FROM propostas p JOIN usuarios u ON u.id = p.usuario_id WHERE p.id = ? LIMIT 1"
     );
     $stmtBuyer->bind_param('i', $root_id);
     $stmtBuyer->execute();
     $buyer = $stmtBuyer->get_result()->fetch_assoc();
     $stmtBuyer->close();
 
-    $notify_subject = '';
-    $notify_html    = '';
-
     if ($acao === 'aceitar') {
+        // Mark this proposal as accepted
         $stmt = $conn->prepare("UPDATE propostas SET status = 'aceita' WHERE id = ?");
         $stmt->bind_param('i', $proposta_id);
         $stmt->execute();
         $stmt->close();
+
+        // Also mark root proposal as accepted for consistent display
+        if ((int)$proposta_id !== $root_id) {
+            $stmt = $conn->prepare("UPDATE propostas SET status = 'aceita' WHERE id = ?");
+            $stmt->bind_param('i', $root_id);
+            $stmt->execute();
+            $stmt->close();
+        }
 
         $stmt = $conn->prepare("UPDATE veiculos SET em_negociacao = 1 WHERE id = ?");
         $stmt->bind_param('i', $proposta['veiculo_id']);
         $stmt->execute();
         $stmt->close();
 
+        // Email buyer with seller's contact info
         if ($buyer) {
-            $notify_subject = 'MotorGo – Sua proposta foi aceita!';
-            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Proposta aceita – MotorGo</h2><p>Olá, {$buyer['nome']}! Sua proposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>aceita</strong>. Entre em contato pelo painel para finalizar o negócio.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
+            $vendNome    = htmlspecialchars($proposta['vendedor_nome'],    ENT_QUOTES, 'UTF-8');
+            $vendEmail   = htmlspecialchars($proposta['vendedor_email'],   ENT_QUOTES, 'UTF-8');
+            $vendCelular = htmlspecialchars($proposta['vendedor_celular'] ?? '', ENT_QUOTES, 'UTF-8');
+            $contactBox  = "<div style='background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:16px;margin:16px 0;'>
+  <p style='margin:0 0 8px;font-weight:bold;color:#166534;'>📞 Dados do Vendedor</p>
+  <table cellpadding='0' cellspacing='0'>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>Nome:</td><td style='padding:3px 0;font-weight:bold;'>{$vendNome}</td></tr>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>E-mail:</td><td style='padding:3px 0;'>{$vendEmail}</td></tr>" .
+    ($vendCelular !== '' ? "<tr><td style='padding:3px 12px 3px 0;color:#374151;'>Celular:</td><td style='padding:3px 0;'>{$vendCelular}</td></tr>" : '') . "
+  </table>
+</div>";
+            $bodyBuyer = "<p>Olá, <strong>" . htmlspecialchars($buyer['nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>🎉 Boa notícia! Sua proposta de <strong style='color:#e63946;'>" . formatMoney((float) $proposta['valor']) . "</strong> foi <strong>aceita</strong>.</p>
+<p>Entre em contato com o vendedor para finalizar o negócio:</p>
+{$contactBox}";
+            sendEmail($buyer['email'], $buyer['nome'], 'MotorGo – Sua proposta foi aceita!',
+                buildEmailHtml('Proposta Aceita! 🎉', $bodyBuyer, 'Acessar painel', SITE_URL . '/painel.php?secao=propostas'));
         }
+
+        // Email vendor with buyer's contact info
+        if ($buyer) {
+            $buyNome    = htmlspecialchars($buyer['nome'],    ENT_QUOTES, 'UTF-8');
+            $buyEmail   = htmlspecialchars($buyer['email'],   ENT_QUOTES, 'UTF-8');
+            $buyCelular = htmlspecialchars($buyer['celular'] ?? '', ENT_QUOTES, 'UTF-8');
+            $contactBoxV = "<div style='background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:16px;margin:16px 0;'>
+  <p style='margin:0 0 8px;font-weight:bold;color:#1d4ed8;'>📞 Dados do Comprador</p>
+  <table cellpadding='0' cellspacing='0'>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>Nome:</td><td style='padding:3px 0;font-weight:bold;'>{$buyNome}</td></tr>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>E-mail:</td><td style='padding:3px 0;'>{$buyEmail}</td></tr>" .
+    ($buyCelular !== '' ? "<tr><td style='padding:3px 12px 3px 0;color:#374151;'>Celular:</td><td style='padding:3px 0;'>{$buyCelular}</td></tr>" : '') . "
+  </table>
+</div>";
+            $bodyVend = "<p>Olá, <strong>" . htmlspecialchars($proposta['vendedor_nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>Você aceitou uma proposta de <strong style='color:#e63946;'>" . formatMoney((float) $proposta['valor']) . "</strong>.</p>
+<p>Entre em contato com o comprador para finalizar o negócio:</p>
+{$contactBoxV}";
+            sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], 'MotorGo – Proposta aceita',
+                buildEmailHtml('Proposta Aceita! 🎉', $bodyVend, 'Acessar painel', SITE_URL . '/painel.php?secao=propostas'));
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Proposta aceita! Os dados de contato foram enviados por e-mail.']);
+        exit;
 
     } elseif ($acao === 'recusar') {
         $stmt = $conn->prepare("UPDATE propostas SET status = 'recusada' WHERE id = ?");
@@ -122,12 +167,10 @@ if ($isVendedor && !$isComprador) {
         $stmt->close();
 
         // Also update the root proposal to recusada (so investidor sees terminal state)
-        if ($proposta['proposta_origem_id']) {
-            $stmt = $conn->prepare("UPDATE propostas SET status = 'recusada' WHERE id = ?");
-            $stmt->bind_param('i', $root_id);
-            $stmt->execute();
-            $stmt->close();
-        }
+        $stmt = $conn->prepare("UPDATE propostas SET status = 'recusada' WHERE id = ?");
+        $stmt->bind_param('i', $root_id);
+        $stmt->execute();
+        $stmt->close();
 
         // Unlock the vehicle (allow new proposals)
         $stmt = $conn->prepare("UPDATE veiculos SET em_negociacao = 0 WHERE id = ?");
@@ -136,9 +179,15 @@ if ($isVendedor && !$isComprador) {
         $stmt->close();
 
         if ($buyer) {
-            $notify_subject = 'MotorGo – Sua proposta foi recusada';
-            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Proposta recusada – MotorGo</h2><p>Olá, {$buyer['nome']}! Sua proposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>recusada</strong>. Você pode fazer uma nova oferta.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
+            $bodyRecused = "<p>Olá, <strong>" . htmlspecialchars($buyer['nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>Infelizmente sua proposta de <strong>" . formatMoney((float) $proposta['valor']) . "</strong> foi <strong>recusada</strong>.</p>
+<p>Você pode enviar uma nova oferta com um valor diferente ou buscar outros veículos disponíveis.</p>";
+            sendEmail($buyer['email'], $buyer['nome'], 'MotorGo – Proposta recusada',
+                buildEmailHtml('Proposta Recusada', $bodyRecused, 'Ver veículos disponíveis', SITE_URL . '/painel.php?secao=propostas'));
         }
+
+        echo json_encode(['success' => true, 'message' => 'Proposta recusada.']);
+        exit;
 
     } elseif ($acao === 'contraproposta') {
         if ($novo_valor <= 0) {
@@ -146,14 +195,13 @@ if ($isVendedor && !$isComprador) {
             exit;
         }
 
-        // Mark current proposal as "contraoferta" (waiting for buyer)
+        // Mark current proposal as waiting for buyer response
         $stmt = $conn->prepare("UPDATE propostas SET status = 'contraoferta' WHERE id = ?");
         $stmt->bind_param('i', $proposta_id);
         $stmt->execute();
         $stmt->close();
 
-        // Insert counter-proposal row attributed to the original buyer
-        // (indicates it is an offer *to* the buyer that they must accept/refuse)
+        // Insert counter-proposal row directed to the original buyer
         $stmt = $conn->prepare(
             "INSERT INTO propostas (veiculo_id, usuario_id, valor, data_proposta, status, proposta_origem_id, mensagem)
              VALUES (?, ?, ?, NOW(), 'contraoferta', ?, ?)"
@@ -163,13 +211,21 @@ if ($isVendedor && !$isComprador) {
         $stmt->close();
 
         if ($buyer) {
-            $notify_subject = 'MotorGo – Você recebeu uma contraproposta';
-            $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta – MotorGo</h2><p>Olá, {$buyer['nome']}! O vendedor enviou uma contraproposta de <strong>" . formatMoney($novo_valor) . "</strong>.</p>" . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "<p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Ver no painel</a></p></div>";
+            $bodyContra = "<p>Olá, <strong>" . htmlspecialchars($buyer['nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>O vendedor enviou uma <strong>contraproposta</strong>:</p>
+<table cellpadding='0' cellspacing='0' style='margin:16px 0;'>
+  <tr><td style='padding:5px 0;color:#6b7280;min-width:120px;'>Novo valor</td>
+      <td style='padding:5px 0;font-weight:bold;color:#e63946;font-size:18px;'>" . formatMoney($novo_valor) . "</td></tr>" .
+($mensagem !== '' ? "  <tr><td style='padding:5px 0;color:#6b7280;vertical-align:top;'>Mensagem</td>
+      <td style='padding:5px 0;font-style:italic;'>\"" . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "\"</td></tr>" : '') . "
+</table>
+<p>Acesse o painel para aceitar, recusar ou enviar uma nova proposta.</p>";
+            sendEmail($buyer['email'], $buyer['nome'], 'MotorGo – Contraproposta recebida',
+                buildEmailHtml('Contraproposta Recebida', $bodyContra, 'Ver no painel', SITE_URL . '/painel.php?secao=propostas'));
         }
-    }
 
-    if ($notify_subject && $notify_html && $buyer) {
-        sendEmail($buyer['email'], $buyer['nome'], $notify_subject, $notify_html);
+        echo json_encode(['success' => true, 'message' => 'Contraproposta enviada com sucesso!']);
+        exit;
     }
 
     echo json_encode(['success' => true, 'message' => 'Resposta registrada com sucesso!']);
@@ -201,9 +257,6 @@ if ($isComprador) {
         exit;
     }
 
-    $notify_subject = '';
-    $notify_html    = '';
-
     if ($acao === 'aceitar') {
         $stmt = $conn->prepare("UPDATE propostas SET status = 'aceita' WHERE id = ?");
         $stmt->bind_param('i', $proposta_id);
@@ -221,11 +274,54 @@ if ($isComprador) {
         $stmt->execute();
         $stmt->close();
 
-        $notify_subject = 'MotorGo – Contraproposta aceita!';
-        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta aceita – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! Sua contraproposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>aceita</strong>. Entre em contato pelo painel para finalizar o negócio.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
-        sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], $notify_subject, $notify_html);
+        // Fetch buyer info (current user)
+        $stmtBuyer2 = $conn->prepare("SELECT nome, email, celular FROM usuarios WHERE id = ? LIMIT 1");
+        $stmtBuyer2->bind_param('i', $root_comprador_id);
+        $stmtBuyer2->execute();
+        $buyerInfo = $stmtBuyer2->get_result()->fetch_assoc();
+        $stmtBuyer2->close();
 
-        echo json_encode(['success' => true, 'message' => 'Contraproposta aceita!']);
+        // Email vendor with buyer's contact info
+        $buyNome    = htmlspecialchars($buyerInfo['nome']    ?? '', ENT_QUOTES, 'UTF-8');
+        $buyEmail   = htmlspecialchars($buyerInfo['email']   ?? '', ENT_QUOTES, 'UTF-8');
+        $buyCelular = htmlspecialchars($buyerInfo['celular'] ?? '', ENT_QUOTES, 'UTF-8');
+        $contactBoxV = "<div style='background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:16px;margin:16px 0;'>
+  <p style='margin:0 0 8px;font-weight:bold;color:#1d4ed8;'>📞 Dados do Comprador</p>
+  <table cellpadding='0' cellspacing='0'>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>Nome:</td><td style='padding:3px 0;font-weight:bold;'>{$buyNome}</td></tr>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>E-mail:</td><td style='padding:3px 0;'>{$buyEmail}</td></tr>" .
+($buyCelular !== '' ? "<tr><td style='padding:3px 12px 3px 0;color:#374151;'>Celular:</td><td style='padding:3px 0;'>{$buyCelular}</td></tr>" : '') . "
+  </table>
+</div>";
+        $bodyVend = "<p>Olá, <strong>" . htmlspecialchars($proposta['vendedor_nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>🎉 Sua contraproposta de <strong style='color:#e63946;'>" . formatMoney((float) $proposta['valor']) . "</strong> foi <strong>aceita</strong>!</p>
+<p>Entre em contato com o comprador para finalizar o negócio:</p>
+{$contactBoxV}";
+        sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], 'MotorGo – Contraproposta aceita!',
+            buildEmailHtml('Contraproposta Aceita! 🎉', $bodyVend, 'Acessar painel', SITE_URL . '/painel.php?secao=propostas'));
+
+        // Email buyer with vendor's contact info
+        $vendNome    = htmlspecialchars($proposta['vendedor_nome'],    ENT_QUOTES, 'UTF-8');
+        $vendEmail   = htmlspecialchars($proposta['vendedor_email'],   ENT_QUOTES, 'UTF-8');
+        $vendCelular = htmlspecialchars($proposta['vendedor_celular'] ?? '', ENT_QUOTES, 'UTF-8');
+        $contactBoxB = "<div style='background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:16px;margin:16px 0;'>
+  <p style='margin:0 0 8px;font-weight:bold;color:#166534;'>📞 Dados do Vendedor</p>
+  <table cellpadding='0' cellspacing='0'>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>Nome:</td><td style='padding:3px 0;font-weight:bold;'>{$vendNome}</td></tr>
+    <tr><td style='padding:3px 12px 3px 0;color:#374151;'>E-mail:</td><td style='padding:3px 0;'>{$vendEmail}</td></tr>" .
+($vendCelular !== '' ? "<tr><td style='padding:3px 12px 3px 0;color:#374151;'>Celular:</td><td style='padding:3px 0;'>{$vendCelular}</td></tr>" : '') . "
+  </table>
+</div>";
+        $bodyBuyer = "<p>Olá, <strong>" . htmlspecialchars($buyerInfo['nome'] ?? '', ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>🎉 Você aceitou uma contraproposta de <strong style='color:#e63946;'>" . formatMoney((float) $proposta['valor']) . "</strong>!</p>
+<p>Entre em contato com o vendedor para finalizar o negócio:</p>
+{$contactBoxB}";
+        if ($buyerInfo) {
+            sendEmail($buyerInfo['email'], $buyerInfo['nome'], 'MotorGo – Proposta aceita!',
+                buildEmailHtml('Proposta Aceita! 🎉', $bodyBuyer, 'Acessar painel', SITE_URL . '/painel.php?secao=propostas'));
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Contraproposta aceita! Os dados de contato foram enviados por e-mail.']);
         exit;
 
     } elseif ($acao === 'recusar') {
@@ -246,9 +342,11 @@ if ($isComprador) {
         $stmt->execute();
         $stmt->close();
 
-        $notify_subject = 'MotorGo – Contraproposta recusada';
-        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Contraproposta recusada – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! O comprador recusou sua contraproposta. Você pode enviar uma nova oferta.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
-        sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], $notify_subject, $notify_html);
+        $bodyRecusedV = "<p>Olá, <strong>" . htmlspecialchars($proposta['vendedor_nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>O comprador recusou sua contraproposta de <strong>" . formatMoney((float) $proposta['valor']) . "</strong>.</p>
+<p>O negócio não foi fechado. O veículo está disponível para novas propostas.</p>";
+        sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], 'MotorGo – Contraproposta recusada',
+            buildEmailHtml('Contraproposta Recusada', $bodyRecusedV, 'Acessar painel', SITE_URL . '/painel.php?secao=propostas'));
 
         echo json_encode(['success' => true, 'message' => 'Contraproposta recusada.']);
         exit;
@@ -274,9 +372,17 @@ if ($isComprador) {
         $stmt->execute();
         $stmt->close();
 
-        $notify_subject = 'MotorGo – Nova contraproposta recebida';
-        $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Nova contraproposta – MotorGo</h2><p>Olá, {$proposta['vendedor_nome']}! O comprador enviou uma nova contraproposta de <strong>" . formatMoney($novo_valor) . "</strong>.</p>" . ($mensagem !== '' ? "<p><strong>Mensagem:</strong> " . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "</p>" : '') . "<p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Ver no painel</a></p></div>";
-        sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], $notify_subject, $notify_html);
+        $bodyNewContra = "<p>Olá, <strong>" . htmlspecialchars($proposta['vendedor_nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
+<p>O comprador enviou uma nova contraproposta:</p>
+<table cellpadding='0' cellspacing='0' style='margin:16px 0;'>
+  <tr><td style='padding:5px 0;color:#6b7280;min-width:120px;'>Novo valor</td>
+      <td style='padding:5px 0;font-weight:bold;color:#e63946;font-size:18px;'>" . formatMoney($novo_valor) . "</td></tr>" .
+($mensagem !== '' ? "  <tr><td style='padding:5px 0;color:#6b7280;vertical-align:top;'>Mensagem</td>
+      <td style='padding:5px 0;font-style:italic;'>\"" . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "\"</td></tr>" : '') . "
+</table>
+<p>Acesse o painel para aceitar, recusar ou enviar uma nova contraproposta.</p>";
+        sendEmail($proposta['vendedor_email'], $proposta['vendedor_nome'], 'MotorGo – Nova contraproposta recebida',
+            buildEmailHtml('Nova Contraproposta Recebida', $bodyNewContra, 'Ver no painel', SITE_URL . '/painel.php?secao=propostas'));
 
         echo json_encode(['success' => true, 'message' => 'Contraproposta enviada com sucesso!']);
         exit;

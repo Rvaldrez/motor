@@ -19,7 +19,7 @@ if ($tipo === 'vendedor') {
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
-               u.nome AS contraparte_nome, u.email AS contraparte_email,
+               u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
                (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id) AS respostas,
                (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
                (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
@@ -42,7 +42,7 @@ if ($tipo === 'vendedor') {
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
-               u.nome AS contraparte_nome, u.email AS contraparte_email,
+               u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
                (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id) AS respostas,
                (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
                (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
@@ -62,7 +62,7 @@ if ($tipo === 'vendedor') {
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
-               u.nome AS contraparte_nome, u.email AS contraparte_email,
+               u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
                (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id) AS respostas,
                (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
                (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
@@ -298,6 +298,21 @@ unset($p);
                     </button>
                     <?php elseif (in_array($effStatus, ['contraoferta','contraproposta','negociando'], true)): ?>
                     <span class="pc-waiting-msg"><i class="fa-solid fa-hourglass-half"></i> Aguardando resposta do comprador</span>
+                    <?php elseif ($effStatus === 'aceita'): ?>
+                    <div class="pc-accepted-info">
+                        <i class="fa-solid fa-circle-check" style="color:var(--color-success,#16a34a);font-size:1.1rem;"></i>
+                        <strong>Negócio fechado!</strong>
+                        <span>Entre em contato com o comprador:</span>
+                        <span><i class="fa-solid fa-user"></i> <?= htmlspecialchars($p['contraparte_nome'], ENT_QUOTES, 'UTF-8') ?></span>
+                        <a href="mailto:<?= htmlspecialchars($p['contraparte_email'], ENT_QUOTES, 'UTF-8') ?>">
+                            <i class="fa-solid fa-envelope"></i> <?= htmlspecialchars($p['contraparte_email'], ENT_QUOTES, 'UTF-8') ?>
+                        </a>
+                        <?php if (!empty($p['contraparte_celular'])): ?>
+                        <a href="https://wa.me/55<?= preg_replace('/\D/', '', $p['contraparte_celular']) ?>" target="_blank" rel="noopener">
+                            <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> <?= htmlspecialchars($p['contraparte_celular'], ENT_QUOTES, 'UTF-8') ?>
+                        </a>
+                        <?php endif; ?>
+                    </div>
                     <?php endif; ?>
 
                 <?php elseif ($tipo === 'investidor'): ?>
@@ -315,6 +330,21 @@ unset($p);
                     <button class="pc-btn pc-btn-contra"  onclick="abrirModalContraproposta(<?= $effId ?>, 'comprador')">
                         <i class="fa-solid fa-arrows-rotate"></i> Nova Proposta
                     </button>
+                    <?php elseif ($effStatus === 'aceita'): ?>
+                    <div class="pc-accepted-info">
+                        <i class="fa-solid fa-circle-check" style="color:var(--color-success,#16a34a);font-size:1.1rem;"></i>
+                        <strong>Negócio fechado!</strong>
+                        <span>Entre em contato com o vendedor:</span>
+                        <span><i class="fa-solid fa-user"></i> <?= htmlspecialchars($p['contraparte_nome'], ENT_QUOTES, 'UTF-8') ?></span>
+                        <a href="mailto:<?= htmlspecialchars($p['contraparte_email'], ENT_QUOTES, 'UTF-8') ?>">
+                            <i class="fa-solid fa-envelope"></i> <?= htmlspecialchars($p['contraparte_email'], ENT_QUOTES, 'UTF-8') ?>
+                        </a>
+                        <?php if (!empty($p['contraparte_celular'])): ?>
+                        <a href="https://wa.me/55<?= preg_replace('/\D/', '', $p['contraparte_celular']) ?>" target="_blank" rel="noopener">
+                            <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> <?= htmlspecialchars($p['contraparte_celular'], ENT_QUOTES, 'UTF-8') ?>
+                        </a>
+                        <?php endif; ?>
+                    </div>
                     <?php elseif ($isRecusada): ?>
                     <div class="pc-recusada-info">
                         <i class="fa-solid fa-circle-xmark" style="color:var(--color-danger);"></i>
@@ -719,4 +749,14 @@ document.addEventListener('DOMContentLoaded', function() {
 .pc-btn-primary:hover { background: var(--color-primary-dark); color: #fff; }
 .pc-waiting-msg { font-size: 0.8125rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.35rem; }
 .pc-recusada-info { font-size: 0.8125rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.35rem; flex: 1; }
+.pc-accepted-info {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1rem;
+    font-size: 0.8125rem; flex: 1;
+}
+.pc-accepted-info strong { color: #15803d; }
+.pc-accepted-info span, .pc-accepted-info a {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    color: var(--color-text-muted); text-decoration: none;
+}
+.pc-accepted-info a:hover { color: var(--color-primary); text-decoration: underline; }
 </style>
