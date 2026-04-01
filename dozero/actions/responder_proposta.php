@@ -121,6 +121,20 @@ if ($isVendedor && !$isComprador) {
         $stmt->execute();
         $stmt->close();
 
+        // Also update the root proposal to recusada (so investidor sees terminal state)
+        if ($proposta['proposta_origem_id']) {
+            $stmt = $conn->prepare("UPDATE propostas SET status = 'recusada' WHERE id = ?");
+            $stmt->bind_param('i', $root_id);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // Unlock the vehicle (allow new proposals)
+        $stmt = $conn->prepare("UPDATE veiculos SET em_negociacao = 0 WHERE id = ?");
+        $stmt->bind_param('i', $proposta['veiculo_id']);
+        $stmt->execute();
+        $stmt->close();
+
         if ($buyer) {
             $notify_subject = 'MotorGo – Sua proposta foi recusada';
             $notify_html    = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><h2 style='color:#1a1a2e'>Proposta recusada – MotorGo</h2><p>Olá, {$buyer['nome']}! Sua proposta de " . formatMoney((float) $proposta['valor']) . " foi <strong>recusada</strong>. Você pode fazer uma nova oferta.</p><p><a href='" . SITE_URL . "/painel.php' style='color:#e63946'>Acessar painel</a></p></div>";
@@ -217,6 +231,18 @@ if ($isComprador) {
     } elseif ($acao === 'recusar') {
         $stmt = $conn->prepare("UPDATE propostas SET status = 'recusada' WHERE id = ?");
         $stmt->bind_param('i', $proposta_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Mark root proposal as recusada so table shows terminal state
+        $stmt = $conn->prepare("UPDATE propostas SET status = 'recusada' WHERE id = ?");
+        $stmt->bind_param('i', $root_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Unlock vehicle for new proposals
+        $stmt = $conn->prepare("UPDATE veiculos SET em_negociacao = 0 WHERE id = ?");
+        $stmt->bind_param('i', $proposta['veiculo_id']);
         $stmt->execute();
         $stmt->close();
 

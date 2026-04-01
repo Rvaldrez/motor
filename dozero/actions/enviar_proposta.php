@@ -62,14 +62,14 @@ if (!in_array($veiculo['status'], ['completo', 'disponivel'], true)) {
 }
 
 $stmt = $conn->prepare(
-    "SELECT id FROM propostas WHERE veiculo_id = ? AND usuario_id = ? AND status = 'aguardando_vendedor' LIMIT 1"
+    "SELECT id FROM propostas WHERE veiculo_id = ? AND usuario_id = ? AND status IN ('aguardando_vendedor','aguardando','aguardando_comprador','contraoferta','negociando') LIMIT 1"
 );
 $stmt->bind_param('ii', $veiculo_id, $usuario_id);
 $stmt->execute();
 $stmt->store_result();
 if ($stmt->num_rows > 0) {
     $stmt->close();
-    echo json_encode(['success' => false, 'message' => 'Você já tem uma proposta aguardando resposta para este veículo.']);
+    echo json_encode(['success' => false, 'message' => 'Você já tem uma proposta em aberto para este veículo.']);
     exit;
 }
 $stmt->close();
