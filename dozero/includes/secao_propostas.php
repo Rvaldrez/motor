@@ -3,6 +3,14 @@
  * Seção: Propostas
  * $conn, $user, $tipo, $csrfToken available from painel.php
  */
+
+// Ensure proposta_origem_id column exists (migration for old DBs)
+$_chk = $conn->query("SHOW COLUMNS FROM propostas LIKE 'proposta_origem_id'");
+if ($_chk && $_chk->num_rows === 0) {
+    $conn->query("ALTER TABLE propostas ADD COLUMN proposta_origem_id INT(11) DEFAULT NULL, ADD INDEX idx_propostas_origem (proposta_origem_id)");
+}
+if ($_chk) { $_chk->free(); }
+
 $userId = (int) $user['id'];
 
 $page = max(1, (int) ($_GET['pp'] ?? 1));
@@ -411,8 +419,8 @@ unset($p);
                 <input type="hidden" name="acao" value="contraproposta">
                 <div class="form-group">
                     <label class="form-label">Novo Valor (R$) <span class="req">*</span></label>
-                    <input type="number" name="novo_valor" id="contraNovoValor" class="form-control"
-                           placeholder="Ex.: 45000" min="1" step="0.01" required>
+                    <input type="text" name="novo_valor" id="contraNovoValor" class="form-control"
+                           placeholder="Ex.: 45.000" inputmode="numeric" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Mensagem (opcional)</label>
@@ -442,7 +450,8 @@ function escHtml(str) {
     return d.innerHTML;
 }
 function fmtBRL(val) {
-    return 'R$\u00a0' + parseFloat(val).toLocaleString('pt-BR', {minimumFractionDigits:2});
+    var n = Math.round(parseFloat(val) || 0);
+    return 'R$\u00a0' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',00';
 }
 function statusLabel(s) {
     var m = {
@@ -573,9 +582,27 @@ function abrirModalContraproposta(propostaId, papel) {
 function fecharModalContraproposta() {
     document.getElementById('modalContraproposta').style.display = 'none';
 }
+
+// Currency mask for counter-offer input
+(function() {
+    function _fmtContra(n) {
+        return 'R$ ' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',00';
+    }
+    var contraInput = document.getElementById('contraNovoValor');
+    if (contraInput) {
+        contraInput.addEventListener('input', function() {
+            var digits = this.value.replace(/\D/g, '');
+            if (!digits) { this.value = ''; return; }
+            this.value = _fmtContra(parseInt(digits, 10));
+        });
+    }
+})();
+
 document.getElementById('btnEnviarContra').addEventListener('click', function() {
     var novoValor = document.getElementById('contraNovoValor');
-    if (!novoValor.value || parseFloat(novoValor.value) <= 0) {
+    var digits = novoValor.value.replace(/\D/g, '');
+    var numVal = digits ? parseInt(digits, 10) : 0;
+    if (!numVal || numVal <= 0) {
         novoValor.classList.add('is-invalid');
         return;
     }
@@ -584,7 +611,10 @@ document.getElementById('btnEnviarContra').addEventListener('click', function() 
     btn.disabled = true;
     btn.classList.add('loading');
 
-    fetch('actions/responder_proposta.php', { method: 'POST', body: new FormData(document.getElementById('formContraproposta')) })
+    var fd = new FormData(document.getElementById('formContraproposta'));
+    fd.set('novo_valor', numVal.toString());
+
+    fetch('actions/responder_proposta.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
             if (data.success) {

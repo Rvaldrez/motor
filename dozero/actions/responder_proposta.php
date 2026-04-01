@@ -15,6 +15,13 @@ if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
     exit;
 }
 
+// Ensure proposta_origem_id column exists (migration for old DBs)
+$_chk = $conn->query("SHOW COLUMNS FROM propostas LIKE 'proposta_origem_id'");
+if ($_chk && $_chk->num_rows === 0) {
+    $conn->query("ALTER TABLE propostas ADD COLUMN proposta_origem_id INT(11) DEFAULT NULL, ADD INDEX idx_propostas_origem (proposta_origem_id)");
+}
+if ($_chk) { $_chk->free(); }
+
 $proposta_id  = (int) ($_POST['proposta_id'] ?? 0);
 $acao         = trim($_POST['acao']          ?? '');
 $novo_valor   = parseCurrency($_POST['novo_valor'] ?? '');

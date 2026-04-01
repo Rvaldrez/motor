@@ -705,17 +705,18 @@ document.addEventListener('keydown', function (e) {
 
 /* ── Modal de Proposta ───────────────────────────────── */
 function _formatBRL(value) {
-    return 'R$ ' + Number(value).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    var n = Math.round(Math.abs(parseInt(value, 10) || 0));
+    return 'R$ ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',00';
 }
 function _parseBRL(str) {
-    return parseFloat((str || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+    var digits = (str || '').replace(/\D/g, '');
+    return digits ? parseInt(digits, 10) : 0;
 }
 function _applyMoedaMask(input) {
     input.addEventListener('input', function () {
         var digits = this.value.replace(/\D/g, '');
         if (!digits) { this.value = ''; return; }
-        var num = parseInt(digits, 10) / 100;
-        this.value = _formatBRL(num);
+        this.value = _formatBRL(parseInt(digits, 10));
     });
 }
 
@@ -754,8 +755,8 @@ document.getElementById('btnEnviarProposta').addEventListener('click', function 
     btn.classList.add('loading');
 
     var formData = new FormData(document.getElementById('formProposta'));
-    // Ensure raw numeric value is sent (PHP sanitizes anyway, but cleaner)
-    formData.set('valor', valorNum.toFixed(2));
+    // Send integer reais value (mask stores full integer, no cents division)
+    formData.set('valor', valorNum.toString());
 
     fetch('actions/enviar_proposta.php', { method: 'POST', body: formData })
         .then(function (r) { return r.json(); })

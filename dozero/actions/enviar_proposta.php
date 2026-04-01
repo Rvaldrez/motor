@@ -34,7 +34,8 @@ if ($valor <= 0) {
 }
 
 $stmt = $conn->prepare(
-    "SELECT v.id, v.usuario_id, v.em_negociacao, v.status, u.nome AS vendedor_nome, u.email AS vendedor_email
+    "SELECT v.id, v.usuario_id, v.em_negociacao, v.status, v.marca, v.modelo, v.ano_fabrica,
+            u.nome AS vendedor_nome, u.email AS vendedor_email
      FROM veiculos v JOIN usuarios u ON u.id = v.usuario_id
      WHERE v.id = ? LIMIT 1"
 );
@@ -87,17 +88,32 @@ $stmt->close();
 
 // Notifica vendedor
 $investidor_nome = $_SESSION['nome'] ?? 'Investidor';
+$veiculo_nome    = htmlspecialchars(trim(($veiculo['marca'] ?? '') . ' ' . ($veiculo['modelo'] ?? '') . ' ' . ($veiculo['ano_fabrica'] ?? '')), ENT_QUOTES, 'UTF-8');
 $emailBody = "<p>Olá, <strong>" . htmlspecialchars($veiculo['vendedor_nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>
-<p>Você recebeu uma nova proposta para o seu veículo.</p>
-<table cellpadding='0' cellspacing='0' style='margin:16px 0;'>
-  <tr><td style='padding:5px 0;color:#6b7280;min-width:120px;'>Investidor</td>
-      <td style='padding:5px 0;font-weight:bold;'>" . htmlspecialchars($investidor_nome, ENT_QUOTES, 'UTF-8') . "</td></tr>
-  <tr><td style='padding:5px 0;color:#6b7280;'>Valor ofertado</td>
-      <td style='padding:5px 0;font-weight:bold;color:#e63946;font-size:18px;'>" . formatMoney($valor) . "</td></tr>
-" . ($mensagem !== '' ? "  <tr><td style='padding:5px 0;color:#6b7280;vertical-align:top;'>Mensagem</td>
-      <td style='padding:5px 0;font-style:italic;'>\"" . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "\"</td></tr>" : '') . "
-</table>
-<p style='color:#6b7280;font-size:13px;'>Acesse o painel para aceitar, recusar ou enviar uma contraproposta.</p>";
+<p>Você recebeu uma nova proposta de compra. Acesse o painel para aceitar, recusar ou enviar uma contraproposta.</p>
+
+<div style='background:#f8f9fa;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin:20px 0;'>
+  <table cellpadding='0' cellspacing='0' width='100%'>
+    <tr>
+      <td style='padding:6px 0;color:#6b7280;font-size:13px;width:130px;'>Veículo</td>
+      <td style='padding:6px 0;font-weight:bold;color:#111827;'>" . ($veiculo_nome ?: '—') . "</td>
+    </tr>
+    <tr>
+      <td style='padding:6px 0;color:#6b7280;font-size:13px;'>Investidor</td>
+      <td style='padding:6px 0;font-weight:bold;color:#111827;'>" . htmlspecialchars($investidor_nome, ENT_QUOTES, 'UTF-8') . "</td>
+    </tr>
+    <tr>
+      <td style='padding:6px 0;color:#6b7280;font-size:13px;'>Valor ofertado</td>
+      <td style='padding:6px 0;'><span style='font-size:22px;font-weight:900;color:#e63946;'>" . formatMoney($valor) . "</span></td>
+    </tr>" .
+($mensagem !== '' ? "
+    <tr>
+      <td style='padding:6px 0;color:#6b7280;font-size:13px;vertical-align:top;'>Mensagem</td>
+      <td style='padding:6px 0;font-style:italic;color:#374151;'>\"" . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . "\"</td>
+    </tr>" : '') . "
+  </table>
+</div>
+<p style='color:#6b7280;font-size:13px;margin-top:0;'>Responda rápido — propostas em aberto ficam aguardando sua decisão.</p>";
 $htmlBody = buildEmailHtml('Nova proposta recebida', $emailBody, 'Ver proposta no painel', SITE_URL . '/painel.php?secao=propostas');
 sendEmail($veiculo['vendedor_email'], $veiculo['vendedor_nome'], 'MotorGo – Nova proposta recebida', $htmlBody);
 
