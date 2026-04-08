@@ -82,7 +82,7 @@ if ($tipo === 'vendedor') {
                u.nome AS investidor_nome
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        INNER JOIN usuarios u ON u.id = p.usuario_id
+        LEFT JOIN usuarios u ON u.id = p.usuario_id
         WHERE v.usuario_id = ?
         ORDER BY p.data_proposta DESC LIMIT 5
     ");

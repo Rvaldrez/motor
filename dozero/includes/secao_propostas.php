@@ -34,7 +34,7 @@ if ($tipo === 'vendedor') {
                (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        INNER JOIN usuarios u ON u.id = p.usuario_id
+        LEFT JOIN usuarios u ON u.id = p.usuario_id
         WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
     ";
     $baseParams = [$userId];
@@ -239,8 +239,8 @@ unset($p);
                     <div class="pc-info-item">
                         <span class="pc-info-label"><?= htmlspecialchars($contraparteLabel, ENT_QUOTES, 'UTF-8') ?></span>
                         <span class="pc-info-val">
-                            <?= htmlspecialchars($p['contraparte_nome'], ENT_QUOTES, 'UTF-8') ?>
-                            <small><?= htmlspecialchars($p['contraparte_email'], ENT_QUOTES, 'UTF-8') ?></small>
+                            <?= htmlspecialchars($p['contraparte_nome'] ?? 'Usuário não encontrado', ENT_QUOTES, 'UTF-8') ?>
+                            <small><?= htmlspecialchars($p['contraparte_email'] ?? '-', ENT_QUOTES, 'UTF-8') ?></small>
                         </span>
                     </div>
                     <div class="pc-info-item">
@@ -586,7 +586,7 @@ function fecharModalContraproposta() {
 // Currency mask for counter-offer input
 (function() {
     function _fmtContra(n) {
-        return 'R$ ' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',00';
+        return 'R$ ' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
     var contraInput = document.getElementById('contraNovoValor');
     if (contraInput) {

@@ -706,7 +706,7 @@ document.addEventListener('keydown', function (e) {
 /* ── Modal de Proposta ───────────────────────────────── */
 function _formatBRL(value) {
     var n = Math.round(Math.abs(parseInt(value, 10) || 0));
-    return 'R$ ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',00';
+    return 'R$ ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 function _parseBRL(str) {
     var digits = (str || '').replace(/\D/g, '');

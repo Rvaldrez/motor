@@ -29,7 +29,7 @@ if ($activeSection === 'oferta' && $tipo === 'vendedor') {
 $badgeVeiculos    = 0;
 $badgePropostas   = 0;
 
-if ($tipo === 'vendedor' || $tipo === 'investidor') {
+if ($tipo === 'vendedor') {
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
@@ -48,6 +48,19 @@ if ($tipo === 'vendedor' || $tipo === 'investidor') {
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         $stmt->bind_result($badgeVeiculos);
+        $stmt->fetch();
+        $stmt->close();
+    }
+
+} elseif ($tipo === 'investidor') {
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) FROM propostas
+        WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador')
+    ");
+    if ($stmt) {
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($badgePropostas);
         $stmt->fetch();
         $stmt->close();
     }
