@@ -43,7 +43,7 @@ $stmt = $conn->prepare(
             u_vend.nome AS vendedor_nome, u_vend.email AS vendedor_email, u_vend.celular AS vendedor_celular
      FROM propostas p
      JOIN veiculos v ON v.id = p.veiculo_id
-     JOIN usuarios u_prop ON u_prop.id = p.usuario_id
+     LEFT JOIN usuarios u_prop ON u_prop.id = p.usuario_id
      JOIN usuarios u_vend ON u_vend.id = v.usuario_id
      WHERE p.id = ? LIMIT 1"
 );

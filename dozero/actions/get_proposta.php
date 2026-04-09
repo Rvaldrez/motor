@@ -29,7 +29,7 @@ $stmt = $conn->prepare("
            u_vend.nome AS vendedor_nome
     FROM propostas p
     JOIN veiculos v ON v.id = p.veiculo_id
-    JOIN usuarios u_prop ON u_prop.id = p.usuario_id
+    LEFT JOIN usuarios u_prop ON u_prop.id = p.usuario_id
     JOIN usuarios u_vend ON u_vend.id = v.usuario_id
     WHERE p.id = ? LIMIT 1
 ");
@@ -72,7 +72,7 @@ $stmtT = $conn->prepare("
            u.nome AS usuario_nome,
            v.usuario_id AS vendedor_id
     FROM propostas p
-    JOIN usuarios u ON u.id = p.usuario_id
+    LEFT JOIN usuarios u ON u.id = p.usuario_id
     JOIN veiculos v ON v.id = p.veiculo_id
     WHERE p.id = ? OR p.proposta_origem_id = ?
     ORDER BY p.id ASC

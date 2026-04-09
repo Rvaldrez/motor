@@ -22,7 +22,7 @@ if ($tipo === 'vendedor') {
     $countSql = "
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
     ";
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
@@ -35,7 +35,7 @@ if ($tipo === 'vendedor') {
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         LEFT JOIN usuarios u ON u.id = p.usuario_id
-        WHERE v.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE v.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
     ";
     $baseParams = [$userId];
     $baseTypes  = 'i';
@@ -45,7 +45,7 @@ if ($tipo === 'vendedor') {
 } elseif ($tipo === 'investidor') {
     $countSql = "
         SELECT COUNT(*) FROM propostas p
-        WHERE p.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
     ";
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
@@ -58,7 +58,7 @@ if ($tipo === 'vendedor') {
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = v.usuario_id
-        WHERE p.usuario_id = ? AND p.proposta_origem_id IS NULL
+        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
     ";
     $baseParams = [$userId];
     $baseTypes  = 'i';
@@ -66,7 +66,7 @@ if ($tipo === 'vendedor') {
     $contraparteLabel = 'Vendedor';
 
 } else { // administrador
-    $countSql = "SELECT COUNT(*) FROM propostas p INNER JOIN veiculos v ON v.id = p.veiculo_id WHERE p.proposta_origem_id IS NULL";
+    $countSql = "SELECT COUNT(*) FROM propostas p INNER JOIN veiculos v ON v.id = p.veiculo_id WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)";
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
@@ -78,7 +78,7 @@ if ($tipo === 'vendedor') {
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = p.usuario_id
-        WHERE p.proposta_origem_id IS NULL
+        WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
     ";
     $baseParams = [];
     $baseTypes  = '';
