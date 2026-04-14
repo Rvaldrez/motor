@@ -22,20 +22,20 @@ if ($tipo === 'vendedor') {
     $countSql = "
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
+        WHERE v.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
                u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
-               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id) AS respostas,
-               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
-               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id) AS respostas,
+               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
+               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         LEFT JOIN usuarios u ON u.id = p.usuario_id
-        WHERE v.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
+        WHERE v.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
     $baseParams = [$userId];
     $baseTypes  = 'i';
@@ -45,20 +45,20 @@ if ($tipo === 'vendedor') {
 } elseif ($tipo === 'investidor') {
     $countSql = "
         SELECT COUNT(*) FROM propostas p
-        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
+        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
                u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
-               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id) AS respostas,
-               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
-               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id) AS respostas,
+               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
+               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = v.usuario_id
-        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
+        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
     $baseParams = [$userId];
     $baseTypes  = 'i';
@@ -66,19 +66,19 @@ if ($tipo === 'vendedor') {
     $contraparteLabel = 'Vendedor';
 
 } else { // administrador
-    $countSql = "SELECT COUNT(*) FROM propostas p INNER JOIN veiculos v ON v.id = p.veiculo_id WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)";
+    $countSql = "SELECT COUNT(*) FROM propostas p INNER JOIN veiculos v ON v.id = p.veiculo_id WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)";
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
                u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
-               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id) AS respostas,
-               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
-               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id) AS respostas,
+               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
+               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = p.usuario_id
-        WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0)
+        WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
     $baseParams = [];
     $baseTypes  = '';
