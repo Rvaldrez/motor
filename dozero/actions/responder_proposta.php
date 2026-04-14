@@ -254,12 +254,27 @@ if ($isComprador) {
         $stmt->execute();
         $stmt->close();
 
+        // Also mark root proposal as cancelled for consistent display
+        if ((int)$proposta_id !== $root_id) {
+            $stmt = $conn->prepare("UPDATE propostas SET status = 'cancelada' WHERE id = ?");
+            $stmt->bind_param('i', $root_id);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // Unlock vehicle: allow new proposals from other buyers
+        $stmt = $conn->prepare("UPDATE veiculos SET em_negociacao = 0 WHERE id = ?");
+        $stmt->bind_param('i', $proposta['veiculo_id']);
+        $stmt->execute();
+        $stmt->close();
+
         echo json_encode(['success' => true, 'message' => 'Proposta cancelada.']);
         exit;
     }
 
     // aceitar / recusar / contraproposta: buyer responding to a counter-proposal row
-    if (!in_array($proposta['status'], ['contraoferta'], true)) {
+    // Also handles old-system 'aguardando_comprador' status (vendor sent counter by updating same row)
+    if (!in_array($proposta['status'], ['contraoferta', 'aguardando_comprador'], true)) {
         echo json_encode(['success' => false, 'message' => 'Não há contraproposta pendente para responder.']);
         exit;
     }

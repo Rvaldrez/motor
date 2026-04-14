@@ -294,7 +294,7 @@ unset($p);
             <!-- Card Footer: action buttons -->
             <div class="pc-footer">
                 <?php if ($tipo === 'vendedor' || $tipo === 'administrador'): ?>
-                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'aguardando_comprador'], true)): ?>
+                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando'], true)): ?>
                     <button class="pc-btn pc-btn-success" onclick="responderProposta(<?= $effId ?>, 'aceitar')">
                         <i class="fa-solid fa-check"></i> Aceitar
                     </button>
@@ -304,7 +304,7 @@ unset($p);
                     <button class="pc-btn pc-btn-contra"  onclick="abrirModalContraproposta(<?= $effId ?>, 'vendedor')">
                         <i class="fa-solid fa-arrows-rotate"></i> Contraproposta
                     </button>
-                    <?php elseif (in_array($effStatus, ['contraoferta','contraproposta','negociando'], true)): ?>
+                    <?php elseif (in_array($effStatus, ['contraoferta','contraproposta','negociando','aguardando_comprador'], true)): ?>
                     <span class="pc-waiting-msg"><i class="fa-solid fa-hourglass-half"></i> Aguardando resposta do comprador</span>
                     <?php elseif ($effStatus === 'aceita'): ?>
                     <div class="pc-accepted-info">
@@ -324,11 +324,11 @@ unset($p);
                     <?php endif; ?>
 
                 <?php elseif ($tipo === 'investidor'): ?>
-                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'aguardando_comprador'], true)): ?>
+                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando'], true)): ?>
                     <button class="pc-btn pc-btn-danger" onclick="responderProposta(<?= $effId ?>, 'cancelar')">
                         <i class="fa-solid fa-ban"></i> Cancelar Proposta
                     </button>
-                    <?php elseif (in_array($effStatus, ['contraoferta','contraproposta'], true)): ?>
+                    <?php elseif (in_array($effStatus, ['contraoferta','contraproposta','aguardando_comprador'], true)): ?>
                     <button class="pc-btn pc-btn-success" onclick="responderProposta(<?= $effId ?>, 'aceitar')">
                         <i class="fa-solid fa-check"></i> Aceitar Oferta
                     </button>

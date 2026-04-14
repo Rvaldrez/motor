@@ -86,6 +86,12 @@ if (!$stmt->execute()) {
 }
 $stmt->close();
 
+// Lock vehicle: hide from "Oferta de Veículos" while proposal is active
+$stmt = $conn->prepare("UPDATE veiculos SET em_negociacao = 1 WHERE id = ?");
+$stmt->bind_param('i', $veiculo_id);
+$stmt->execute();
+$stmt->close();
+
 // Notifica vendedor
 $investidor_nome = $_SESSION['nome'] ?? 'Investidor';
 $veiculo_nome    = htmlspecialchars(trim(($veiculo['marca'] ?? '') . ' ' . ($veiculo['modelo'] ?? '') . ' ' . ($veiculo['ano_fabrica'] ?? '')), ENT_QUOTES, 'UTF-8');
