@@ -147,8 +147,14 @@ function props_statusBadge(string $status): string {
         'aguardando_comprador'=> ['#fef3c7','#92400e','Aguardando'],
         'aguardando'          => ['#fef3c7','#92400e','Aguardando'],
         'aceita'              => ['#d1fae5','#065f46','Aceita'],
-        'recusada'            => ['#fee2e2','#991b1b','Recusada'],
-        'cancelada'           => ['#f3f4f6','#6b7280','Cancelada'],
+        'recusada'                      => ['#fee2e2','#991b1b','Recusada'],
+        'recusada_vendedor'             => ['#fee2e2','#991b1b','Recusada'],
+        'recusada_investidor'           => ['#fee2e2','#991b1b','Recusada'],
+        'historico_recusada_vendedor'   => ['#f3f4f6','#6b7280','Encerrada'],
+        'historico_recusada_investidor' => ['#f3f4f6','#6b7280','Encerrada'],
+        'historico_recusada'            => ['#f3f4f6','#6b7280','Encerrada'],
+        'historico'                     => ['#f3f4f6','#6b7280','Encerrada'],
+        'cancelada'                     => ['#f3f4f6','#6b7280','Cancelada'],
         'contraproposta'      => ['#ede9fe','#5b21b6','Contraproposta'],
         'contraoferta'        => ['#ede9fe','#5b21b6','Contraproposta'],
         'negociando'          => ['#fff7ed','#c2410c','Negociando'],
@@ -215,7 +221,7 @@ unset($p);
             $rootId    = (int) $p['id'];
             $hasHistory = (int)($p['respostas'] ?? 0) > 0;
             // Determine if the offer is in a terminal refused state
-            $isRecusada = in_array($effStatus, ['recusada', 'cancelada'], true);
+            $isRecusada = in_array($effStatus, ['recusada', 'cancelada', 'recusada_vendedor', 'recusada_investidor', 'historico_recusada_vendedor', 'historico_recusada_investidor', 'historico_recusada', 'historico'], true);
             // For display, use effective_status badge
         ?>
         <div class="prop-card" id="pcard-<?= $rootId ?>">
@@ -320,6 +326,11 @@ unset($p);
                             <i class="fa-brands fa-whatsapp" style="color:#16a34a;"></i> <?= htmlspecialchars($p['contraparte_celular'], ENT_QUOTES, 'UTF-8') ?>
                         </a>
                         <?php endif; ?>
+                    </div>
+                    <?php elseif ($isRecusada): ?>
+                    <div class="pc-recusada-info">
+                        <i class="fa-solid fa-circle-xmark" style="color:var(--color-danger);"></i>
+                        <span>Proposta encerrada pelo comprador. Seu veículo está disponível para novas propostas.</span>
                     </div>
                     <?php endif; ?>
 
