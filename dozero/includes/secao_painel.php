@@ -228,7 +228,8 @@ if ($tipo === 'vendedor') {
             SUM(CASE WHEN p.status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE p.usuario_id = ? OR v.usuario_id = ?
+        WHERE (p.usuario_id = ? OR v.usuario_id = ?)
+          AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ");
     if ($stmtChart) $stmtChart->bind_param('ii', $userId, $userId);
 } else {
@@ -350,7 +351,7 @@ function painel_statusBadge(string $status): string {
             </div>
             <div class="stat-card-body">
                 <span class="stat-card-value"><?= (int)$totalPropostas ?></span>
-                <span class="stat-card-label">Propostas Enviadas</span>
+                <span class="stat-card-label">Minhas Propostas</span>
             </div>
         </div>
         <div class="stat-card">
