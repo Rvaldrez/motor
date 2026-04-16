@@ -53,12 +53,16 @@ if ($tipo === 'vendedor') {
     }
 
 } elseif ($tipo === 'investidor') {
+    // Investors may also own vehicles — count proposals from both sides
     $stmt = $conn->prepare("
-        SELECT COUNT(*) FROM propostas
-        WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador', 'contraoferta')
+        SELECT COUNT(*) FROM propostas p
+        INNER JOIN veiculos v ON v.id = p.veiculo_id
+        WHERE (p.usuario_id = ? OR v.usuario_id = ?)
+          AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador', 'contraoferta')
+          AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ");
     if ($stmt) {
-        $stmt->bind_param('i', $userId);
+        $stmt->bind_param('ii', $userId, $userId);
         $stmt->execute();
         $stmt->bind_result($badgePropostas);
         $stmt->fetch();

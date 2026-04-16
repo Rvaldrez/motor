@@ -43,27 +43,36 @@ if ($tipo === 'vendedor') {
     $contraparteLabel = 'Comprador';
 
 } elseif ($tipo === 'investidor') {
+    // Investors can also own vehicles and receive proposals on them.
+    // Show ALL proposals where the user is involved: either as buyer (p.usuario_id)
+    // or as seller (v.usuario_id). The 'meu_papel' column is derived in PHP post-fetch.
     $countSql = "
         SELECT COUNT(*) FROM propostas p
-        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
+        INNER JOIN veiculos v ON v.id = p.veiculo_id
+        WHERE (p.usuario_id = ? OR v.usuario_id = ?)
+          AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
     $dataSql = "
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
-               u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
+               p.usuario_id AS proposta_usuario_id,
+               uc.nome AS comprador_nome, uc.email AS comprador_email, uc.celular AS comprador_celular,
+               uv.nome AS vendedor_nome,  uv.email AS vendedor_email,  uv.celular AS vendedor_celular,
                (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id) AS respostas,
                (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
                (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
                (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        INNER JOIN usuarios u ON u.id = v.usuario_id
-        WHERE p.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
+        LEFT JOIN usuarios uc ON uc.id = p.usuario_id
+        LEFT JOIN usuarios uv ON uv.id = v.usuario_id
+        WHERE (p.usuario_id = ? OR v.usuario_id = ?)
+          AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
-    $baseParams = [$userId];
-    $baseTypes  = 'i';
-    $sectionTitle = 'Minhas Propostas';
-    $contraparteLabel = 'Vendedor';
+    $baseParams = [$userId, $userId];
+    $baseTypes  = 'ii';
+    $sectionTitle = 'Propostas';
+    $contraparteLabel = ''; // Resolved per-row in display
 
 } else { // administrador
     $countSql = "SELECT COUNT(*) FROM propostas p INNER JOIN veiculos v ON v.id = p.veiculo_id WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)";
@@ -103,9 +112,13 @@ if ($stmtCount === false) {
 } else {
     $allCountParams = array_merge($baseParams, $filterParams);
     if (!empty($allCountParams)) {
-        if ($tipo === 'vendedor' || $tipo === 'investidor') {
+        if ($tipo === 'vendedor') {
             $cp = array_merge([(int)$userId], $filterParams);
             $ct = 'i' . $filterTypes;
+            $stmtCount->bind_param($ct, ...$cp);
+        } elseif ($tipo === 'investidor') {
+            $cp = array_merge([(int)$userId, (int)$userId], $filterParams);
+            $ct = 'ii' . $filterTypes;
             $stmtCount->bind_param($ct, ...$cp);
         } elseif (!empty($filterParams)) {
             $stmtCount->bind_param($filterTypes, ...$filterParams);
@@ -166,11 +179,28 @@ function props_statusBadge(string $status): string {
         . htmlspecialchars($d[2], ENT_QUOTES, 'UTF-8') . '</span>';
 }
 
-// Compute effective status & action ID for each proposal
+// Compute effective status & action ID for each proposal.
+// For investidor dual-role: also resolve meu_papel and contraparte fields.
 foreach ($propostas as &$p) {
     $hasChild = !empty($p['ultima_contra_id']);
     $p['effective_status'] = $hasChild ? ($p['ultima_contra_status'] ?? $p['status']) : $p['status'];
     $p['effective_id']     = $hasChild ? (int)$p['ultima_contra_id'] : (int)$p['id'];
+
+    if ($tipo === 'investidor') {
+        if ((int)($p['proposta_usuario_id'] ?? 0) === $userId) {
+            // User made this proposal → they are the buyer
+            $p['meu_papel']           = 'comprador';
+            $p['contraparte_nome']    = $p['vendedor_nome']    ?? '';
+            $p['contraparte_email']   = $p['vendedor_email']   ?? '';
+            $p['contraparte_celular'] = $p['vendedor_celular'] ?? '';
+        } else {
+            // Proposal is on user's vehicle → they are the seller
+            $p['meu_papel']           = 'vendedor';
+            $p['contraparte_nome']    = $p['comprador_nome']    ?? '';
+            $p['contraparte_email']   = $p['comprador_email']   ?? '';
+            $p['contraparte_celular'] = $p['comprador_celular'] ?? '';
+        }
+    }
 }
 unset($p);
 ?>
@@ -222,7 +252,13 @@ unset($p);
             $hasHistory = (int)($p['respostas'] ?? 0) > 0;
             // Determine if the offer is in a terminal refused state
             $isRecusada = in_array($effStatus, ['recusada', 'cancelada', 'recusada_vendedor', 'recusada_investidor', 'historico_recusada_vendedor', 'historico_recusada_investidor', 'historico_recusada', 'historico'], true);
-            // For display, use effective_status badge
+            // For investidor dual-role: determine which hat the user wears for this proposal
+            $meuPapel = $p['meu_papel'] ?? ($tipo === 'vendedor' ? 'vendedor' : ($tipo === 'investidor' ? 'comprador' : 'admin'));
+            $rowContraparteLabel = ($tipo === 'investidor')
+                ? ($meuPapel === 'comprador' ? 'Vendedor' : 'Comprador')
+                : $contraparteLabel;
+            $isVendedorRole  = ($tipo === 'vendedor' || $tipo === 'administrador' || ($tipo === 'investidor' && $meuPapel === 'vendedor'));
+            $isCompradorRole = ($tipo === 'investidor' && $meuPapel === 'comprador');
         ?>
         <div class="prop-card" id="pcard-<?= $rootId ?>">
 
@@ -234,6 +270,11 @@ unset($p);
                     <span class="pc-year"><?= htmlspecialchars($p['ano_fabrica'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
                 <div class="pc-header-right">
+                    <?php if ($tipo === 'investidor'): ?>
+                    <span style="font-size:0.7rem;padding:2px 8px;border-radius:9999px;font-weight:600;background:<?= $meuPapel === 'vendedor' ? '#dbeafe' : '#fef3c7' ?>;color:<?= $meuPapel === 'vendedor' ? '#1e40af' : '#92400e' ?>;">
+                        <?= $meuPapel === 'vendedor' ? 'Recebida' : 'Enviada' ?>
+                    </span>
+                    <?php endif; ?>
                     <?= props_statusBadge($effStatus) ?>
                     <span class="pc-date"><?= !empty($p['data_proposta']) ? date('d/m/Y H:i', strtotime($p['data_proposta'])) : '-' ?></span>
                 </div>
@@ -243,7 +284,7 @@ unset($p);
             <div class="pc-body">
                 <div class="pc-info-row">
                     <div class="pc-info-item">
-                        <span class="pc-info-label"><?= htmlspecialchars($contraparteLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="pc-info-label"><?= htmlspecialchars($rowContraparteLabel, ENT_QUOTES, 'UTF-8') ?></span>
                         <span class="pc-info-val">
                             <?= htmlspecialchars($p['contraparte_nome'] ?? 'Usuário não encontrado', ENT_QUOTES, 'UTF-8') ?>
                             <small><?= htmlspecialchars($p['contraparte_email'] ?? '-', ENT_QUOTES, 'UTF-8') ?></small>
@@ -299,7 +340,7 @@ unset($p);
 
             <!-- Card Footer: action buttons -->
             <div class="pc-footer">
-                <?php if ($tipo === 'vendedor' || $tipo === 'administrador'): ?>
+                <?php if ($isVendedorRole): ?>
                     <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando'], true)): ?>
                     <button class="pc-btn pc-btn-success" onclick="responderProposta(<?= $effId ?>, 'aceitar')">
                         <i class="fa-solid fa-check"></i> Aceitar
@@ -334,7 +375,7 @@ unset($p);
                     </div>
                     <?php endif; ?>
 
-                <?php elseif ($tipo === 'investidor'): ?>
+                <?php elseif ($isCompradorRole): ?>
                     <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando'], true)): ?>
                     <button class="pc-btn pc-btn-danger" onclick="responderProposta(<?= $effId ?>, 'cancelar')">
                         <i class="fa-solid fa-ban"></i> Cancelar Proposta

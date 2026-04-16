@@ -97,30 +97,44 @@ if ($tipo === 'vendedor') {
     }
 
 } elseif ($tipo === 'investidor') {
-    // Total de propostas enviadas
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ?");
+    // Investors may also own vehicles. Count all proposals they are involved in.
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) FROM propostas p
+        INNER JOIN veiculos v ON v.id = p.veiculo_id
+        WHERE p.usuario_id = ? OR v.usuario_id = ?
+    ");
     if ($stmt) {
-        $stmt->bind_param('i', $userId);
+        $stmt->bind_param('ii', $userId, $userId);
         $stmt->execute();
         $stmt->bind_result($totalPropostas);
         $stmt->fetch();
         $stmt->close();
     }
 
-    // Propostas pendentes
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador', 'contraoferta')");
+    // Propostas pendentes (both as buyer and seller)
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) FROM propostas p
+        INNER JOIN veiculos v ON v.id = p.veiculo_id
+        WHERE (p.usuario_id = ? OR v.usuario_id = ?)
+          AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador', 'contraoferta')
+          AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
+    ");
     if ($stmt) {
-        $stmt->bind_param('i', $userId);
+        $stmt->bind_param('ii', $userId, $userId);
         $stmt->execute();
         $stmt->bind_result($propostas_pendentes);
         $stmt->fetch();
         $stmt->close();
     }
 
-    // Propostas aceitas
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM propostas WHERE usuario_id = ? AND status = 'aceita'");
+    // Propostas aceitas (both sides)
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) FROM propostas p
+        INNER JOIN veiculos v ON v.id = p.veiculo_id
+        WHERE (p.usuario_id = ? OR v.usuario_id = ?) AND p.status = 'aceita'
+    ");
     if ($stmt) {
-        $stmt->bind_param('i', $userId);
+        $stmt->bind_param('ii', $userId, $userId);
         $stmt->execute();
         $stmt->bind_result($propostas_aceitas);
         $stmt->fetch();
@@ -136,19 +150,20 @@ if ($tipo === 'vendedor') {
         $stmt->close();
     }
 
-    // Propostas recentes enviadas
+    // Propostas recentes: sent and received, most recent first
     $stmt = $conn->prepare("
         SELECT p.id, p.valor, p.status, p.data_proposta,
                v.marca, v.modelo, v.ano_fabrica,
-               u.nome AS vendedor_nome
+               uv.nome AS vendedor_nome,
+               IF(p.usuario_id = ?, 'comprador', 'vendedor') AS meu_papel
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        INNER JOIN usuarios u ON u.id = v.usuario_id
-        WHERE p.usuario_id = ?
+        LEFT JOIN usuarios uv ON uv.id = v.usuario_id
+        WHERE p.usuario_id = ? OR v.usuario_id = ?
         ORDER BY p.data_proposta DESC LIMIT 5
     ");
     if ($stmt) {
-        $stmt->bind_param('i', $userId);
+        $stmt->bind_param('iii', $userId, $userId, $userId);
         $stmt->execute();
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
@@ -207,14 +222,15 @@ if ($tipo === 'vendedor') {
 } elseif ($tipo === 'investidor') {
     $stmtChart = $conn->prepare("
         SELECT
-            SUM(CASE WHEN status IN ('aguardando_vendedor','aguardando','aguardando_comprador') THEN 1 ELSE 0 END) AS pendentes,
-            SUM(CASE WHEN status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
-            SUM(CASE WHEN status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
-            SUM(CASE WHEN status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
-        FROM propostas
-        WHERE usuario_id = ?
+            SUM(CASE WHEN p.status IN ('aguardando_vendedor','aguardando','aguardando_comprador') THEN 1 ELSE 0 END) AS pendentes,
+            SUM(CASE WHEN p.status = 'aceita' THEN 1 ELSE 0 END) AS aceitas,
+            SUM(CASE WHEN p.status = 'recusada' THEN 1 ELSE 0 END) AS recusadas,
+            SUM(CASE WHEN p.status IN ('contraoferta','contraproposta','negociando') THEN 1 ELSE 0 END) AS negociando
+        FROM propostas p
+        INNER JOIN veiculos v ON v.id = p.veiculo_id
+        WHERE p.usuario_id = ? OR v.usuario_id = ?
     ");
-    if ($stmtChart) $stmtChart->bind_param('i', $userId);
+    if ($stmtChart) $stmtChart->bind_param('ii', $userId, $userId);
 } else {
     $stmtChart = $conn->prepare("
         SELECT
@@ -528,7 +544,7 @@ function painel_statusBadge(string $status): string {
                         <?php foreach ($propostasRecentes as $p): ?>
                         <tr>
                             <td><?= htmlspecialchars($p['marca'] . ' ' . $p['modelo'] . ' ' . ($p['ano_fabrica'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
-                            <td><?= htmlspecialchars($p[$tipo === 'vendedor' ? 'investidor_nome' : 'vendedor_nome'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
+                            <td><?= htmlspecialchars($p[$tipo === 'vendedor' ? 'investidor_nome' : 'vendedor_nome'] ?? ($p['meu_papel'] === 'vendedor' ? '-' : ($p['vendedor_nome'] ?? '-')), ENT_QUOTES, 'UTF-8') ?></td>
                             <td><?= formatMoney((float)$p['valor']) ?></td>
                             <td><?= painel_statusBadge($p['status']) ?></td>
                         </tr>
