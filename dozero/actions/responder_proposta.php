@@ -88,7 +88,7 @@ if (!$isVendedor && !$isComprador) {
 //  on proposals waiting for the seller (aguardando_vendedor)
 // ══════════════════════════════════════════════════════════════
 if ($isVendedor && !$isComprador) {
-    if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando'], true)) {
+    if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando', 'pendente'], true)) {
         echo json_encode(['success' => false, 'message' => 'Esta proposta não pode ser respondida.']);
         exit;
     }

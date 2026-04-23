@@ -259,6 +259,11 @@ unset($p);
                 : $contraparteLabel;
             $isVendedorRole  = ($tipo === 'vendedor' || $tipo === 'administrador' || ($tipo === 'investidor' && $meuPapel === 'vendedor'));
             $isCompradorRole = ($tipo === 'investidor' && $meuPapel === 'comprador');
+            // For vendor: when they've sent a counter-proposal and are waiting for the buyer,
+            // show "Aguardando" badge instead of "Contraproposta" to communicate their perspective.
+            $badgeStatus = ($isVendedorRole && in_array($effStatus, ['contraoferta', 'contraproposta'], true))
+                ? 'aguardando_comprador'
+                : $effStatus;
         ?>
         <div class="prop-card" id="pcard-<?= $rootId ?>">
 
@@ -275,7 +280,7 @@ unset($p);
                         <?= $meuPapel === 'vendedor' ? 'Recebida' : 'Enviada' ?>
                     </span>
                     <?php endif; ?>
-                    <?= props_statusBadge($effStatus) ?>
+                    <?= props_statusBadge($badgeStatus) ?>
                     <span class="pc-date"><?= !empty($p['data_proposta']) ? date('d/m/Y H:i', strtotime($p['data_proposta'])) : '-' ?></span>
                 </div>
             </div>
@@ -341,7 +346,7 @@ unset($p);
             <!-- Card Footer: action buttons -->
             <div class="pc-footer">
                 <?php if ($isVendedorRole): ?>
-                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando'], true)): ?>
+                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente'], true)): ?>
                     <button class="pc-btn pc-btn-success" onclick="responderProposta(<?= $effId ?>, 'aceitar')">
                         <i class="fa-solid fa-check"></i> Aceitar
                     </button>
