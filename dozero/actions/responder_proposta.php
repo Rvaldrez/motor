@@ -88,7 +88,7 @@ if (!$isVendedor && !$isComprador) {
 //  on proposals waiting for the seller (aguardando_vendedor)
 // ══════════════════════════════════════════════════════════════
 if ($isVendedor && !$isComprador) {
-    if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando', 'pendente', 'contraproposta_comprador', 'resposta_comprador'], true)) {
+    if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando', 'pendente', 'recebida', 'contraproposta_comprador', 'resposta_comprador'], true)) {
         echo json_encode(['success' => false, 'message' => 'Esta proposta não pode ser respondida.']);
         exit;
     }
@@ -274,7 +274,7 @@ if ($isComprador) {
 
     // aceitar / recusar / contraproposta: buyer responding to a counter-proposal row
     // Also handles old-system 'aguardando_comprador' status (vendor sent counter by updating same row)
-    if (!in_array($proposta['status'], ['contraoferta', 'aguardando_comprador'], true)) {
+    if (!in_array($proposta['status'], ['contraoferta', 'aguardando_comprador', 'recebida'], true)) {
         echo json_encode(['success' => false, 'message' => 'Não há contraproposta pendente para responder.']);
         exit;
     }

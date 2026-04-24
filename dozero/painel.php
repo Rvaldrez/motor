@@ -33,7 +33,7 @@ if ($tipo === 'vendedor') {
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
-        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor')
+        WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor', 'recebida')
     ");
     if ($stmt) {
         $stmt->bind_param('i', $userId);
@@ -58,7 +58,7 @@ if ($tipo === 'vendedor') {
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         WHERE (p.usuario_id = ? OR v.usuario_id = ?)
-          AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador', 'contraoferta')
+          AND p.status IN ('aguardando', 'aguardando_vendedor', 'aguardando_comprador', 'contraoferta', 'recebida')
           AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ");
     if ($stmt) {
