@@ -88,7 +88,7 @@ if (!$isVendedor && !$isComprador) {
 //  on proposals waiting for the seller (aguardando_vendedor)
 // ══════════════════════════════════════════════════════════════
 if ($isVendedor && !$isComprador) {
-    if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando', 'pendente'], true)) {
+    if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando', 'pendente', 'contraproposta_comprador', 'resposta_comprador'], true)) {
         echo json_encode(['success' => false, 'message' => 'Esta proposta não pode ser respondida.']);
         exit;
     }
@@ -245,7 +245,7 @@ if ($isVendedor && !$isComprador) {
 if ($isComprador) {
     // cancelar: buyer cancels their pending proposal
     if ($acao === 'cancelar') {
-        if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando_comprador', 'aguardando'], true)) {
+        if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando_comprador', 'aguardando', 'pendente'], true)) {
             echo json_encode(['success' => false, 'message' => 'Proposta não pode ser cancelada neste momento.']);
             exit;
         }

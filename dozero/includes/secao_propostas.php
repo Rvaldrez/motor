@@ -168,9 +168,11 @@ function props_statusBadge(string $status): string {
         'historico_recusada'            => ['#f3f4f6','#6b7280','Encerrada'],
         'historico'                     => ['#f3f4f6','#6b7280','Encerrada'],
         'cancelada'                     => ['#f3f4f6','#6b7280','Cancelada'],
-        'contraproposta'      => ['#ede9fe','#5b21b6','Contraproposta'],
-        'contraoferta'        => ['#ede9fe','#5b21b6','Contraproposta'],
-        'negociando'          => ['#fff7ed','#c2410c','Negociando'],
+        'contraproposta'           => ['#ede9fe','#5b21b6','Contraproposta'],
+        'contraoferta'             => ['#ede9fe','#5b21b6','Contraproposta'],
+        'contraproposta_comprador' => ['#ede9fe','#5b21b6','Contraproposta'],
+        'resposta_comprador'       => ['#ede9fe','#5b21b6','Contraproposta'],
+        'negociando'               => ['#fff7ed','#c2410c','Negociando'],
         'finalizada'          => ['#dbeafe','#1e40af','Finalizada'],
         'expirada'            => ['#f3f4f6','#9ca3af','Expirada'],
     ];
@@ -346,7 +348,7 @@ unset($p);
             <!-- Card Footer: action buttons -->
             <div class="pc-footer">
                 <?php if ($isVendedorRole): ?>
-                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente'], true)): ?>
+                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente', 'contraproposta_comprador', 'resposta_comprador'], true)): ?>
                     <button class="pc-btn pc-btn-success" onclick="responderProposta(<?= $effId ?>, 'aceitar')">
                         <i class="fa-solid fa-check"></i> Aceitar
                     </button>
@@ -381,7 +383,7 @@ unset($p);
                     <?php endif; ?>
 
                 <?php elseif ($isCompradorRole): ?>
-                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando'], true)): ?>
+                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente'], true)): ?>
                     <button class="pc-btn pc-btn-danger" onclick="responderProposta(<?= $effId ?>, 'cancelar')">
                         <i class="fa-solid fa-ban"></i> Cancelar Proposta
                     </button>
@@ -418,7 +420,7 @@ unset($p);
                     <a href="?secao=oferta" class="pc-btn pc-btn-primary">
                         <i class="fa-solid fa-plus"></i> Nova Proposta
                     </a>
-                    <?php elseif ($effStatus === 'negociando'): ?>
+                    <?php elseif ($effStatus === 'negociando' || $effStatus === 'contraproposta_comprador' || $effStatus === 'resposta_comprador'): ?>
                     <span class="pc-waiting-msg"><i class="fa-solid fa-hourglass-half"></i> Aguardando resposta do vendedor</span>
                     <?php endif; ?>
                 <?php endif; ?>
