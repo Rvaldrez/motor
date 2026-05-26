@@ -154,6 +154,76 @@ if ($stmtData === false) {
     $stmtData->close();
 }
 
+// ─── Chain resolution ────────────────────────────────────────────────────────
+// The SQL sub-queries above only find DIRECT children of each root proposal
+// (WHERE cp2.proposta_origem_id = p.id). Old-site data created via
+// processar_contraproposta.php uses proposta_origem_id = current_proposal_id
+// (not root_id), so grandchildren and deeper descendants are invisible to the
+// sub-queries. This block fetches all non-root proposals for the same vehicles
+// and traverses each chain with BFS to find the true latest proposal,
+// overriding the SQL values when a deeper descendant exists.
+if (!empty($propostas)) {
+    $vehicleIds = array_values(array_unique(array_column($propostas, 'veiculo_id')));
+    $inPH = implode(',', array_fill(0, count($vehicleIds), '?'));
+    $stmtChain = $conn->prepare(
+        "SELECT id, veiculo_id, status, valor, proposta_origem_id
+         FROM propostas
+         WHERE veiculo_id IN ($inPH)
+           AND proposta_origem_id IS NOT NULL
+           AND proposta_origem_id != 0
+           AND proposta_origem_id != id
+         ORDER BY id ASC"
+    );
+    if ($stmtChain !== false) {
+        $chTypes = str_repeat('i', count($vehicleIds));
+        $stmtChain->bind_param($chTypes, ...$vehicleIds);
+        $stmtChain->execute();
+        $chainRows = $stmtChain->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmtChain->close();
+
+        // Index by id; build parent→children map
+        $chainById  = [];
+        $childrenOf = [];
+        foreach ($chainRows as $row) {
+            $chainById[$row['id']] = $row;
+            $childrenOf[(int) $row['proposta_origem_id']][] = (int) $row['id'];
+        }
+
+        // BFS from each root to find the latest (highest-id) proposal in the chain
+        foreach ($propostas as &$p) {
+            $rootId  = (int) $p['id'];
+            $latest  = null;
+            $count   = 0;
+            $queue   = [$rootId];
+            $visited = [];
+            while (!empty($queue)) {
+                $curr = array_shift($queue);
+                if (isset($visited[$curr])) {
+                    continue;
+                }
+                $visited[$curr] = true;
+                if (isset($childrenOf[$curr])) {
+                    foreach ($childrenOf[$curr] as $childId) {
+                        $count++;
+                        if ($latest === null || $childId > $latest['id']) {
+                            $latest = $chainById[$childId];
+                        }
+                        $queue[] = $childId;
+                    }
+                }
+            }
+            if ($latest !== null) {
+                $p['ultima_contra_id']     = $latest['id'];
+                $p['ultima_contra_status'] = $latest['status'];
+                $p['ultima_contra_valor']  = $latest['valor'];
+                $p['respostas']            = $count;
+            }
+        }
+        unset($p);
+    }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function props_statusBadge(string $status): string {
     $map = [
         'aguardando_vendedor' => ['#fef3c7','#92400e','Aguardando'],
