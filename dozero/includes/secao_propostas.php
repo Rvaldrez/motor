@@ -225,6 +225,7 @@ if (!empty($propostas)) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function props_statusBadge(string $status): string {
+    $status = strtolower(trim($status));
     $map = [
         'aguardando_vendedor' => ['#fef3c7','#92400e','Aguardando'],
         'aguardando_comprador'=> ['#fef3c7','#92400e','Aguardando'],
@@ -256,7 +257,8 @@ function props_statusBadge(string $status): string {
 // For investidor dual-role: also resolve meu_papel and contraparte fields.
 foreach ($propostas as &$p) {
     $hasChild = !empty($p['ultima_contra_id']);
-    $p['effective_status'] = $hasChild ? ($p['ultima_contra_status'] ?? $p['status']) : $p['status'];
+    $effectiveStatusRaw = $hasChild ? ($p['ultima_contra_status'] ?? $p['status']) : $p['status'];
+    $p['effective_status'] = strtolower(trim((string)$effectiveStatusRaw));
     $p['effective_id']     = $hasChild ? (int)$p['ultima_contra_id'] : (int)$p['id'];
 
     if ($tipo === 'investidor') {
@@ -319,7 +321,7 @@ unset($p);
     <!-- Proposal Cards -->
     <div class="prop-cards">
         <?php foreach ($propostas as $p):
-            $effStatus = $p['effective_status'];
+            $effStatus = strtolower(trim((string)($p['effective_status'] ?? '')));
             $effId     = (int) $p['effective_id'];
             $rootId    = (int) $p['id'];
             $hasHistory = (int)($p['respostas'] ?? 0) > 0;
