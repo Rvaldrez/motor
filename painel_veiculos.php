@@ -504,7 +504,7 @@ $aceitacao = $totalPropostas > 0 ? round(($propostasAceitas / $totalPropostas) *
           el.style.pointerEvents = "auto";
           el.style.cursor = "pointer";
           el.addEventListener("click", () => {
-            window.location.href = "cadastro_investidor_vendedor.php";
+            window.location.href = "cadastro_investidor.php";
           });
         }
       });
