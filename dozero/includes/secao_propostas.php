@@ -28,10 +28,10 @@ if ($tipo === 'vendedor') {
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
                u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
-               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id) AS respostas,
-               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
-               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id AND cp.veiculo_id = p.veiculo_id) AS respostas,
+               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
+               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         LEFT JOIN usuarios u ON u.id = p.usuario_id
@@ -58,10 +58,10 @@ if ($tipo === 'vendedor') {
                p.usuario_id AS proposta_usuario_id,
                uc.nome AS comprador_nome, uc.email AS comprador_email, uc.celular AS comprador_celular,
                uv.nome AS vendedor_nome,  uv.email AS vendedor_email,  uv.celular AS vendedor_celular,
-               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id) AS respostas,
-               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
-               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id AND cp.veiculo_id = p.veiculo_id) AS respostas,
+               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
+               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         LEFT JOIN usuarios uc ON uc.id = p.usuario_id
@@ -80,10 +80,10 @@ if ($tipo === 'vendedor') {
         SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
                u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
-               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id) AS respostas,
-               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
-               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id AND cp.veiculo_id = p.veiculo_id) AS respostas,
+               (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
+               (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = p.usuario_id
@@ -100,7 +100,11 @@ $filterParams = [];
 $filterTypes  = '';
 
 if ($filterStatus !== '') {
-    $filterConditions .= " AND p.status = ?";
+    // Filter by effective status (latest child's status, or root status when no children exist).
+    // Comparing only p.status (root) would miss proposals that advanced beyond the initial state,
+    // because the root status is set to 'contraoferta' after the first vendor counter and never
+    // changes again — even though the negotiation continues through child rows.
+    $filterConditions .= " AND COALESCE((SELECT cp_f.status FROM propostas cp_f WHERE cp_f.proposta_origem_id = p.id AND cp_f.id != p.id AND cp_f.veiculo_id = p.veiculo_id ORDER BY cp_f.id DESC LIMIT 1), p.status) = ?";
     $filterParams[] = $filterStatus;
     $filterTypes .= 's';
 }
@@ -204,6 +208,10 @@ if (!empty($propostas)) {
                 $visited[$curr] = true;
                 if (isset($childrenOf[$curr])) {
                     foreach ($childrenOf[$curr] as $childId) {
+                        // Skip proposals that belong to a different vehicle (data-integrity guard).
+                        if ((int)($chainById[$childId]['veiculo_id'] ?? 0) !== (int)$p['veiculo_id']) {
+                            continue;
+                        }
                         $count++;
                         if ($latest === null || $childId > $latest['id']) {
                             $latest = $chainById[$childId];
@@ -257,7 +265,7 @@ function props_statusBadge(string $status): string {
 // For investidor dual-role: also resolve meu_papel and contraparte fields.
 foreach ($propostas as &$p) {
     $hasChild = !empty($p['ultima_contra_id']);
-    $effectiveStatusRaw = $hasChild ? ($p['ultima_contra_status'] ?? $p['status']) : $p['status'];
+    $effectiveStatusRaw = $hasChild ? ($p['ultima_contra_status'] ?: $p['status']) : $p['status'];
     $p['effective_status'] = strtolower(trim((string)$effectiveStatusRaw));
     $p['effective_id']     = $hasChild ? (int)$p['ultima_contra_id'] : (int)$p['id'];
 
