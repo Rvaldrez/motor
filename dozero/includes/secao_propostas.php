@@ -265,7 +265,9 @@ function props_statusBadge(string $status): string {
 // For investidor dual-role: also resolve meu_papel and contraparte fields.
 foreach ($propostas as &$p) {
     $hasChild = !empty($p['ultima_contra_id']);
-    $effectiveStatusRaw = $hasChild ? ($p['ultima_contra_status'] ?: $p['status']) : $p['status'];
+    $effectiveStatusRaw = ($hasChild && isset($p['ultima_contra_status']) && $p['ultima_contra_status'] !== '')
+        ? $p['ultima_contra_status']
+        : $p['status'];
     $p['effective_status'] = strtolower(trim((string)$effectiveStatusRaw));
     $p['effective_id']     = $hasChild ? (int)$p['ultima_contra_id'] : (int)$p['id'];
 
