@@ -70,6 +70,7 @@ while ($p = $result->fetch_assoc()):
     $statusOrig    = htmlspecialchars($p['status']);
     $statusClass   = str_replace('_', '-', $statusOrig);
     $propostaId    = $p['id'];
+    $mostrarAcoes  = in_array($statusOrig, ['aguardando_comprador', 'contraproposta_vendedor'], true);
 ?>
 <div class="card-proposta-recebida status-<?= $statusClass ?>" data-id="<?= $propostaId ?>" data-status="<?= $statusOrig ?>">
     <img src="<?= $foto ?>" class="imagem-veiculo" alt="Foto do veículo" />
@@ -94,7 +95,7 @@ while ($p = $result->fetch_assoc()):
         <p><strong>Valor FIPE:</strong> R$ <?= number_format($p['preco'], 2, ',', '.') ?></p>
         <p><strong>Proposta Atual:</strong> <span style="color:#900;"><strong>R$ <?= $valorProposta ?></strong></span></p>
 
-        <?php if ($statusOrig === 'aguardando_comprador'): ?>
+        <?php if (in_array($statusOrig, ['aguardando_comprador', 'contraproposta_vendedor'], true)): ?>
             <p class="status-aguardando">Status: <span class="laranja">Aguardando sua resposta</span></p>
         <?php elseif ($statusOrig === 'aguardando_vendedor'): ?>
             <p class="status-aguardando">Status: <span class="laranja">Aguardando retorno do vendedor</span></p>
@@ -103,10 +104,10 @@ while ($p = $result->fetch_assoc()):
         <?php endif; ?>
     </div>
 
-    <?php if ($statusOrig === 'aguardando_comprador'): ?>
+    <?php if ($mostrarAcoes): ?>
         <div class="acoes-proposta">
             <button class="btn-aceitar" data-id="<?= $propostaId ?>">Aceitar</button>
-            <button class="btn-negociar" data-id="<?= $propostaId ?>">Negociar</button>
+            <button class="btn-negociar" data-id="<?= $propostaId ?>">Nova Proposta</button>
             <button class="btn-recusar" data-id="<?= $propostaId ?>">Recusar</button>
         </div>
 

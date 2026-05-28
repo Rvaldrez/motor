@@ -90,6 +90,7 @@ while ($p = $result->fetch_assoc()):
 
     $temPropostasVisiveis = true;
     $statusClass = str_replace('_', '-', $statusOrig);
+    $mostrarAcoes = in_array($statusOrig, ['aguardando_vendedor', 'contraproposta_comprador', 'pendente'], true);
 
     ob_start();
     ?>
@@ -121,10 +122,10 @@ while ($p = $result->fetch_assoc()):
             <?php endif; ?>
         </div>
 
-        <?php if (in_array($statusOrig, ['aguardando_vendedor', 'contraproposta_comprador'])): ?>
+        <?php if ($mostrarAcoes): ?>
         <div class="acoes-proposta">
             <button class="btn-aceitar" data-id="<?= $propostaId ?>">Aceitar</button>
-            <button class="btn-negociar" data-id="<?= $propostaId ?>">Negociar</button>
+            <button class="btn-negociar" data-id="<?= $propostaId ?>">Nova Proposta</button>
             <button class="btn-recusar" data-id="<?= $propostaId ?>">Recusar</button>
         </div>
         <div class="form-negociacao" id="negociacao<?= $propostaId ?>">
