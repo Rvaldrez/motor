@@ -148,10 +148,29 @@ function cancelarProposta(veiculoId) {
   }
 }
 
+function parseValorMonetario(valorBruto) {
+  if (typeof valorBruto === "number") return valorBruto;
+
+  let valor = String(valorBruto || "")
+    .replace(/\s/g, "")
+    .replace("R$", "")
+    .replace(/[^\d,.-]/g, "");
+
+  if (!valor) return 0;
+
+  if (valor.includes(",")) {
+    valor = valor.replace(/\./g, "").replace(",", ".");
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(valor)) {
+    valor = valor.replace(/\./g, "");
+  }
+
+  const numero = parseFloat(valor);
+  return Number.isFinite(numero) ? numero : 0;
+}
+
 function confirmarProposta(veiculoId) {
   const campo = document.getElementById('valorProposta' + veiculoId);
-  let valor = campo.value.replace(/\s/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.');
-  const valorFloat = parseFloat(valor);
+  const valorFloat = parseValorMonetario(campo?.value);
 
   if (!valorFloat || valorFloat <= 0) {
     mostrarPopup("⚠️ Informe um valor válido.");
@@ -314,8 +333,7 @@ document.addEventListener("click", function (e) {
     const campo = document.getElementById("valorNegociado" + id);
     if (!campo) return;
   
-    let valor = campo.value.replace(/\s/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.');
-    const valorFloat = parseFloat(valor);
+    const valorFloat = parseValorMonetario(campo.value);
   
     if (!valorFloat || valorFloat <= 0) {
       mostrarPopup("⚠️ Informe um valor válido.");
@@ -805,7 +823,6 @@ function atualizarBarra(etapa) {
     barra.style.width = `${etapa * 33}%`;
   }
 }
-
 
 
 

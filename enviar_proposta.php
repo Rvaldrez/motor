@@ -4,6 +4,29 @@ require_once "conexao_bd.php";
 require_once "helpers/email_proposta.php";
 header("Content-Type: application/json");
 
+function normalizarValorMonetario($valor): float {
+    if (is_numeric($valor)) {
+        return (float) $valor;
+    }
+
+    $valor = trim((string) $valor);
+    $valor = str_replace(['R$', ' '], '', $valor);
+    $valor = preg_replace('/[^\d,.\-]/', '', $valor);
+
+    if ($valor === '') {
+        return 0.0;
+    }
+
+    if (strpos($valor, ',') !== false) {
+        $valor = str_replace('.', '', $valor);
+        $valor = str_replace(',', '.', $valor);
+    } elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $valor)) {
+        $valor = str_replace('.', '', $valor);
+    }
+
+    return (float) $valor;
+}
+
 if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_tipo'] !== 'investidor') {
     echo json_encode(["success" => false, "message" => "Acesso negado."]);
     exit;
@@ -18,7 +41,7 @@ if (!$veiculo_id || !$valor) {
     exit;
 }
 
-$valorNumerico = floatval($valor);
+$valorNumerico = normalizarValorMonetario($valor);
 if ($valorNumerico <= 0) {
     echo json_encode(["success" => false, "message" => "Valor da proposta inválido."]);
     exit;

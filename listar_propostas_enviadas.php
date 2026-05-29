@@ -107,7 +107,7 @@ while ($p = $result->fetch_assoc()):
     <?php if ($mostrarAcoes): ?>
         <div class="acoes-proposta">
             <button class="btn-aceitar" data-id="<?= $propostaId ?>">Aceitar</button>
-            <button class="btn-negociar" data-id="<?= $propostaId ?>">Nova Proposta</button>
+            <button class="btn-negociar" data-id="<?= $propostaId ?>">Contraproposta</button>
             <button class="btn-recusar" data-id="<?= $propostaId ?>">Recusar</button>
         </div>
 
