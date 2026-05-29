@@ -170,7 +170,12 @@ function parseValorMonetario(valorBruto) {
 
 function confirmarProposta(veiculoId) {
   const campo = document.getElementById('valorProposta' + veiculoId);
-  const valorFloat = parseValorMonetario(campo?.value);
+  if (!campo) {
+    mostrarPopup("❌ Campo de proposta não encontrado.");
+    return;
+  }
+
+  const valorFloat = parseValorMonetario(campo.value);
 
   if (!valorFloat || valorFloat <= 0) {
     mostrarPopup("⚠️ Informe um valor válido.");
@@ -823,7 +828,6 @@ function atualizarBarra(etapa) {
     barra.style.width = `${etapa * 33}%`;
   }
 }
-
 
 
 

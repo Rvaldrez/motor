@@ -95,7 +95,7 @@ while ($p = $result->fetch_assoc()):
         <p><strong>Valor FIPE:</strong> R$ <?= number_format($p['preco'], 2, ',', '.') ?></p>
         <p><strong>Proposta Atual:</strong> <span style="color:#900;"><strong>R$ <?= $valorProposta ?></strong></span></p>
 
-        <?php if (in_array($statusOrig, ['aguardando_comprador', 'contraproposta_vendedor'], true)): ?>
+        <?php if ($mostrarAcoes): ?>
             <p class="status-aguardando">Status: <span class="laranja">Aguardando sua resposta</span></p>
         <?php elseif ($statusOrig === 'aguardando_vendedor'): ?>
             <p class="status-aguardando">Status: <span class="laranja">Aguardando retorno do vendedor</span></p>

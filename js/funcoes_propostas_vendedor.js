@@ -189,26 +189,6 @@ function confirmarNegociacao(id) {
     return;
   }
 
-  function parseValorMonetario(valorBruto) {
-    if (typeof valorBruto === "number") return valorBruto;
-
-    let valor = String(valorBruto || "")
-      .replace(/\s/g, "")
-      .replace("R$", "")
-      .replace(/[^\d,.-]/g, "");
-
-    if (!valor) return 0;
-
-    if (valor.includes(",")) {
-      valor = valor.replace(/\./g, "").replace(",", ".");
-    } else if (/^\d{1,3}(\.\d{3})+$/.test(valor)) {
-      valor = valor.replace(/\./g, "");
-    }
-
-    const numero = parseFloat(valor);
-    return Number.isFinite(numero) ? numero : 0;
-  }
-
   mostrarLoader();
   btnEnviar.disabled = true;
   btnEnviar.innerHTML = `<span class="spinner-loader"></span> Enviando...`;
@@ -236,6 +216,26 @@ function confirmarNegociacao(id) {
       btnEnviar.disabled = false;
       btnEnviar.innerHTML = "Enviar";
     });
+}
+
+function parseValorMonetario(valorBruto) {
+  if (typeof valorBruto === "number") return valorBruto;
+
+  let valor = String(valorBruto || "")
+    .replace(/\s/g, "")
+    .replace("R$", "")
+    .replace(/[^\d,.-]/g, "");
+
+  if (!valor) return 0;
+
+  if (valor.includes(",")) {
+    valor = valor.replace(/\./g, "").replace(",", ".");
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(valor)) {
+    valor = valor.replace(/\./g, "");
+  }
+
+  const numero = parseFloat(valor);
+  return Number.isFinite(numero) ? numero : 0;
 }
 
 // ✅ Máscara monetária
@@ -313,4 +313,3 @@ function mostrarPopupConfirmacao(mensagem, onConfirmar) {
     popup.remove();
   };
 }
-
