@@ -699,6 +699,44 @@ window.irParaPaginaEnter = function(event) {
     }
 }
 
+function normalizarValorMonetarioLocal(valorBruto) {
+    if (typeof valorBruto === 'number') {
+        return Number.isFinite(valorBruto) ? valorBruto : 0;
+    }
+
+    let valor = String(valorBruto || '')
+        .replace(/\s/g, '')
+        .replace('R$', '')
+        .replace(/[^\d,.\-]/g, '');
+
+    if (!valor) return 0;
+
+    const temVirgula = valor.includes(',');
+    const temPonto = valor.includes('.');
+
+    if (temVirgula && temPonto) {
+        const ultimoSeparador = Math.max(valor.lastIndexOf(','), valor.lastIndexOf('.'));
+        const inteiro = valor.slice(0, ultimoSeparador).replace(/[.,]/g, '');
+        const decimal = valor.slice(ultimoSeparador + 1).replace(/[^\d]/g, '');
+        valor = `${inteiro}.${decimal}`;
+    } else if (temVirgula) {
+        if (/,\d{1,2}$/.test(valor)) {
+            valor = valor.replace(/\./g, '').replace(',', '.');
+        } else {
+            valor = valor.replace(/,/g, '');
+        }
+    } else if (temPonto) {
+        if (/\.\d{1,2}$/.test(valor)) {
+            valor = valor.replace(/,/g, '');
+        } else {
+            valor = valor.replace(/\./g, '');
+        }
+    }
+
+    const numero = parseFloat(valor);
+    return Number.isFinite(numero) ? numero : 0;
+}
+
 // ========== RESETAR PAGINAÇÃO AO FILTRAR ==========
 document.addEventListener('DOMContentLoaded', function() {
     const btnFiltrar = document.querySelector('.botao-filtrar button');
@@ -763,7 +801,7 @@ window.confirmarPropostaDesktop = function(veiculoId) {
     const valorInput = document.getElementById(`valorPropostaDesktop${veiculoId}`);
     if (!valorInput) return;
     
-    const valor = valorInput.value.replace(/\D/g, '') / 100;
+    const valor = normalizarValorMonetarioLocal(valorInput.value);
     
     if (valor <= 0) {
         alert('Por favor, informe um valor válido.');
@@ -773,7 +811,7 @@ window.confirmarPropostaDesktop = function(veiculoId) {
     // Criar input temporário para reutilizar a função confirmarProposta existente
     const tempInput = document.createElement('input');
     tempInput.id = `valorProposta${veiculoId}`;
-    tempInput.value = valorInput.value;
+    tempInput.value = `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     document.body.appendChild(tempInput);
     
     // Chamar a função existente
@@ -849,7 +887,7 @@ window.confirmarPropostaListaMobile = function(veiculoId) {
     const valorInput = document.getElementById(`valorPropostaListaMobile${veiculoId}`);
     if (!valorInput) return;
     
-    const valor = valorInput.value.replace(/\D/g, '') / 100;
+    const valor = normalizarValorMonetarioLocal(valorInput.value);
     
     if (valor <= 0) {
         alert('Por favor, informe um valor válido.');
@@ -859,7 +897,7 @@ window.confirmarPropostaListaMobile = function(veiculoId) {
     // Criar input temporário para reutilizar a função confirmarProposta existente
     const tempInput = document.createElement('input');
     tempInput.id = `valorProposta${veiculoId}`;
-    tempInput.value = valorInput.value;
+    tempInput.value = `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     document.body.appendChild(tempInput);
     
     // Chamar a função existente

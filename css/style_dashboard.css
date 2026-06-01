@@ -2,11 +2,13 @@
 
 .sidebar .logo {
   display: block;
-  width: 100%;
-  max-width: 210px;
+  width: auto;
+  max-width: 240px;
+  min-width: 180px;
   height: auto;
   max-height: none;
   object-fit: contain;
+  object-position: center;
   margin: 12px auto 20px;
 }
 

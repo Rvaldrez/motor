@@ -62,7 +62,7 @@ while ($p = $result->fetch_assoc()):
     $propostaId = $p['id'];
     $foto = htmlspecialchars($p['caminho_foto'] ?? 'imagens/default_car.png');
     $valorProposta = number_format($p['valor'], 2, ',', '.');
-    $mostrarAcoes = in_array($statusOrig, ['aguardando_vendedor', 'contraproposta_comprador', 'pendente'], true);
+    $mostrarAcoes = in_array($statusOrig, ['aguardando_vendedor', 'aguardando_comprador', 'contraproposta_comprador', 'pendente'], true);
 
     $temPropostasVisiveis = true;
 
@@ -82,9 +82,7 @@ while ($p = $result->fetch_assoc()):
 
         <?php
         $statusMsg = '';
-        if ($statusOrig === 'aguardando_comprador') {
-            $statusMsg = 'Aguardando retorno do comprador';
-        } elseif (in_array($statusOrig, ['aguardando_vendedor', 'pendente', 'contraproposta_comprador'])) {
+        if (in_array($statusOrig, ['aguardando_vendedor', 'aguardando_comprador', 'pendente', 'contraproposta_comprador'])) {
             $statusMsg = 'Aguardando sua resposta';
         }
 
