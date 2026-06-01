@@ -240,12 +240,22 @@ function parseValorMonetario(valorBruto) {
 
 // ✅ Máscara monetária
 document.addEventListener("input", function (e) {
-  if (e.target.classList.contains("mascara-valor")) {
-    let valor = e.target.value.replace(/\D/g, "");
-    valor = (valor / 100).toFixed(2) + "";
-    valor = valor.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    e.target.value = "R$ " + valor;
+  if (!e.target.classList.contains("mascara-valor")) return;
+  const el = e.target;
+  const inputType = e.inputType || "";
+  const inputData = e.data;
+  let prevInt = el.dataset.intVal || "";
+  if (inputType.startsWith("delete")) {
+    prevInt = prevInt.slice(0, -1);
+  } else if (inputData !== null && inputData !== undefined) {
+    if (/^\d+$/.test(inputData)) prevInt += inputData;
+  } else {
+    prevInt = el.value.replace(/\D/g, "").slice(0, 15);
   }
+  if (!prevInt || prevInt === "0") { el.value = ""; el.dataset.intVal = ""; return; }
+  prevInt = String(parseInt(prevInt, 10));
+  el.dataset.intVal = prevInt;
+  el.value = "R$ " + prevInt.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00";
 });
 
 // ✅ Copiar dados do comprador

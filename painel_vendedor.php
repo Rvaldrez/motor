@@ -231,6 +231,8 @@ document.querySelector('li[onclick="showSection(\'propostas\')"]').addEventListe
 
 <!-- SCRIPTS -->
 <script>
+const USUARIO_ID = <?= json_encode((int)$_SESSION['usuario_id']); ?>;
+const USUARIO_TIPO = "vendedor";
 function toggleSidebar() {
   const sidebar = document.querySelector('.sidebar');
   const overlay = document.getElementById('overlay');
