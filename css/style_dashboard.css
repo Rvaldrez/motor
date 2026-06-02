@@ -37,12 +37,13 @@
 
 .sidebar .logo {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 220px;
   height: auto;
-  max-height: none;
+  max-height: 58px;
   object-fit: contain;
   object-position: center;
-  margin: 20px 0;
+  margin: 18px auto 24px;
 }
 
 .main-content {

@@ -90,7 +90,8 @@ while ($p = $result->fetch_assoc()):
 
     $temPropostasVisiveis = true;
     $statusClass = str_replace('_', '-', $statusOrig);
-    $mostrarAcoes = in_array($statusOrig, ['aguardando_vendedor', 'aguardando_comprador', 'contraproposta_comprador', 'pendente'], true);
+    $statusAguardandoResposta = ['aguardando_vendedor', 'contraproposta_comprador', 'contraproposta_vendedor', 'pendente'];
+    $mostrarAcoes = in_array($statusOrig, $statusAguardandoResposta, true);
 
     ob_start();
     ?>
@@ -111,8 +112,10 @@ while ($p = $result->fetch_assoc()):
 
             <?php
             $statusMsg = '';
-            if (in_array($statusOrig, ['aguardando_vendedor', 'aguardando_comprador', 'pendente', 'contraproposta_comprador'])) {
+            if (in_array($statusOrig, $statusAguardandoResposta, true)) {
                 $statusMsg = 'Aguardando sua resposta';
+            } elseif ($statusOrig === 'aguardando_comprador') {
+                $statusMsg = 'Aguardando retorno do comprador';
             }
 
             if ($statusMsg): ?>
