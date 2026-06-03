@@ -213,7 +213,7 @@ if ($isVendedor && !$isComprador) {
             "INSERT INTO propostas (veiculo_id, usuario_id, valor, data_proposta, status, proposta_origem_id, mensagem)
              VALUES (?, ?, ?, NOW(), 'contraoferta', ?, ?)"
         );
-        $stmt->bind_param('iidis', $proposta['veiculo_id'], $root_comprador_id, $novo_valor, $root_id, $mensagem);
+        $stmt->bind_param('iidis', $proposta['veiculo_id'], $usuario_id, $novo_valor, $root_id, $mensagem);
         $stmt->execute();
         $stmt->close();
 
@@ -273,8 +273,14 @@ if ($isComprador) {
     }
 
     // aceitar / recusar / contraproposta: buyer responding to a counter-proposal row
-    // Also handles old-system 'aguardando_comprador' status (vendor sent counter by updating same row)
-    if (!in_array($proposta['status'], ['contraoferta', 'aguardando_comprador', 'recebida'], true)) {
+    // Also handles old-system inconsistencies where a seller counter comes as "aguardando_vendedor".
+    $statusAtual = strtolower(trim((string) $proposta['status']));
+    $contraPendenteComprador = in_array($statusAtual, ['contraoferta', 'aguardando_comprador', 'recebida'], true);
+    $aguardandoVendedorRecebidoPeloComprador = (
+        $statusAtual === 'aguardando_vendedor'
+        && (int) $proposta['prop_usuario_id'] !== $root_comprador_id
+    );
+    if (!$contraPendenteComprador && !$aguardandoVendedorRecebidoPeloComprador) {
         echo json_encode(['success' => false, 'message' => 'Não há contraproposta pendente para responder.']);
         exit;
     }
@@ -412,4 +418,3 @@ if ($isComprador) {
 }
 
 echo json_encode(['success' => false, 'message' => 'Ação não permitida.']);
-

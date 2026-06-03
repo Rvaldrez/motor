@@ -25,13 +25,14 @@ if ($tipo === 'vendedor') {
         WHERE v.usuario_id = ? AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ";
     $dataSql = "
-        SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
+        SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem, p.usuario_id AS proposta_usuario_id,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
                u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
                (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id AND cp.veiculo_id = p.veiculo_id) AS respostas,
                (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
                (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status,
+               (SELECT cp2.usuario_id FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_usuario_id
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         LEFT JOIN usuarios u ON u.id = p.usuario_id
@@ -61,7 +62,8 @@ if ($tipo === 'vendedor') {
                (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id AND cp.veiculo_id = p.veiculo_id) AS respostas,
                (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
                (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status,
+               (SELECT cp2.usuario_id FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_usuario_id
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         LEFT JOIN usuarios uc ON uc.id = p.usuario_id
@@ -77,13 +79,14 @@ if ($tipo === 'vendedor') {
 } else { // administrador
     $countSql = "SELECT COUNT(*) FROM propostas p INNER JOIN veiculos v ON v.id = p.veiculo_id WHERE (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)";
     $dataSql = "
-        SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem,
+        SELECT p.id, p.valor, p.status, p.data_proposta, p.mensagem, p.usuario_id AS proposta_usuario_id,
                v.marca, v.modelo, v.ano_fabrica, v.id AS veiculo_id,
                u.nome AS contraparte_nome, u.email AS contraparte_email, u.celular AS contraparte_celular,
                (SELECT COUNT(*) FROM propostas cp WHERE cp.proposta_origem_id = p.id AND cp.id != p.id AND cp.veiculo_id = p.veiculo_id) AS respostas,
                (SELECT cp2.id    FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_id,
                (SELECT cp2.valor FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_valor,
-               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status
+               (SELECT cp2.status FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_status,
+               (SELECT cp2.usuario_id FROM propostas cp2 WHERE cp2.proposta_origem_id = p.id AND cp2.id != p.id AND cp2.veiculo_id = p.veiculo_id ORDER BY cp2.id DESC LIMIT 1) AS ultima_contra_usuario_id
         FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         INNER JOIN usuarios u ON u.id = p.usuario_id
@@ -170,7 +173,7 @@ if (!empty($propostas)) {
     $vehicleIds = array_values(array_unique(array_column($propostas, 'veiculo_id')));
     $inPH = implode(',', array_fill(0, count($vehicleIds), '?'));
     $stmtChain = $conn->prepare(
-        "SELECT id, veiculo_id, status, valor, proposta_origem_id
+        "SELECT id, veiculo_id, usuario_id, status, valor, proposta_origem_id
          FROM propostas
          WHERE veiculo_id IN ($inPH)
            AND proposta_origem_id IS NOT NULL
@@ -224,6 +227,7 @@ if (!empty($propostas)) {
                 $p['ultima_contra_id']     = $latest['id'];
                 $p['ultima_contra_status'] = $latest['status'];
                 $p['ultima_contra_valor']  = $latest['valor'];
+                $p['ultima_contra_usuario_id'] = $latest['usuario_id'];
                 $p['respostas']            = $count;
             }
         }
@@ -270,6 +274,9 @@ foreach ($propostas as &$p) {
         : $p['status'];
     $p['effective_status'] = strtolower(trim((string)$effectiveStatusRaw));
     $p['effective_id']     = $hasChild ? (int)$p['ultima_contra_id'] : (int)$p['id'];
+    $p['effective_usuario_id'] = $hasChild
+        ? (int)($p['ultima_contra_usuario_id'] ?? 0)
+        : (int)($p['proposta_usuario_id'] ?? 0);
 
     if ($tipo === 'investidor') {
         if ((int)($p['proposta_usuario_id'] ?? 0) === $userId) {
@@ -344,6 +351,18 @@ unset($p);
                 : $contraparteLabel;
             $isVendedorRole  = ($tipo === 'vendedor' || $tipo === 'administrador' || ($tipo === 'investidor' && $meuPapel === 'vendedor'));
             $isCompradorRole = ($tipo === 'investidor' && $meuPapel === 'comprador');
+            $effUsuarioId = (int)($p['effective_usuario_id'] ?? 0);
+            $compradorPodeResponderContra =
+                in_array($effStatus, ['contraoferta', 'contraproposta', 'aguardando_comprador', 'recebida'], true)
+                || (
+                    $effStatus === 'aguardando_vendedor'
+                    && (int)($p['respostas'] ?? 0) > 0
+                    && $effUsuarioId !== 0
+                    && $effUsuarioId !== $userId
+                );
+            $compradorPodeCancelar =
+                in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente'], true)
+                && !$compradorPodeResponderContra;
             // For vendor: when they've sent a counter-proposal and are waiting for the buyer,
             // show "Aguardando" badge instead of "Contraproposta" to communicate their perspective.
             $badgeStatus = ($isVendedorRole && in_array($effStatus, ['contraoferta', 'contraproposta'], true))
@@ -466,11 +485,11 @@ unset($p);
                     <?php endif; ?>
 
                 <?php elseif ($isCompradorRole): ?>
-                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente'], true)): ?>
+                    <?php if ($compradorPodeCancelar): ?>
                     <button class="pc-btn pc-btn-danger" onclick="responderProposta(<?= $effId ?>, 'cancelar')">
                         <i class="fa-solid fa-ban"></i> Cancelar Proposta
                     </button>
-                    <?php elseif (in_array($effStatus, ['contraoferta','contraproposta','aguardando_comprador','recebida'], true)): ?>
+                    <?php elseif ($compradorPodeResponderContra): ?>
                     <button class="pc-btn pc-btn-success" onclick="responderProposta(<?= $effId ?>, 'aceitar')">
                         <i class="fa-solid fa-check"></i> Aceitar Oferta
                     </button>
