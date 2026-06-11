@@ -23,6 +23,7 @@ $usuario = $result_user->fetch_assoc();
 <head>
 <script>
   const USUARIO_ID = <?= json_encode($usuario_id); ?>;
+  const USUARIO_TIPO = "investidor";
 </script>
 
 
