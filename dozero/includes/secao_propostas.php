@@ -352,6 +352,8 @@ unset($p);
             $isVendedorRole  = ($tipo === 'vendedor' || $tipo === 'administrador' || ($tipo === 'investidor' && $meuPapel === 'vendedor'));
             $isCompradorRole = ($tipo === 'investidor' && $meuPapel === 'comprador');
             $effUsuarioId = (int)($p['effective_usuario_id'] ?? 0);
+            // Fallback para cadeias antigas/inconsistentes onde o autor da última oferta não veio resolvido;
+            // nesse caso mantemos a ação visível para não bloquear a negociação por ausência desse vínculo.
             $usuarioRecebeuUltimaOferta = ($tipo === 'administrador') || $effUsuarioId === 0 || $effUsuarioId !== $userId;
             $usuarioEnviouUltimaOferta  = $effUsuarioId !== 0 && $effUsuarioId === $userId;
             $vendedorPodeResponder =
