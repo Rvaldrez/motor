@@ -77,6 +77,10 @@ if ($proposta['proposta_origem_id']) {
 $isAdmin     = ($tipo === 'administrador');
 $isVendedor  = $isAdmin || ($usuario_id === $vendedor_id);
 $isComprador = ($usuario_id === $root_comprador_id);
+$ultimo_autor_id = $prop_usuario_id;
+$ultimo_receptor_id = ($ultimo_autor_id === $vendedor_id) ? $root_comprador_id : $vendedor_id;
+$usuarioEhAutorUltimaOferta = ($usuario_id === $ultimo_autor_id);
+$usuarioEhReceptorUltimaOferta = $isAdmin || ($usuario_id === $ultimo_receptor_id);
 
 if (!$isVendedor && !$isComprador) {
     echo json_encode(['success' => false, 'message' => 'Sem permissão para responder esta proposta.']);
@@ -88,6 +92,11 @@ if (!$isVendedor && !$isComprador) {
 //  on proposals waiting for the seller (aguardando_vendedor)
 // ══════════════════════════════════════════════════════════════
 if ($isVendedor && !$isComprador) {
+    if (!$usuarioEhReceptorUltimaOferta) {
+        echo json_encode(['success' => false, 'message' => 'Essa proposta não está aguardando sua resposta.']);
+        exit;
+    }
+
     if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando', 'pendente', 'recebida', 'contraproposta_comprador', 'resposta_comprador'], true)) {
         echo json_encode(['success' => false, 'message' => 'Esta proposta não pode ser respondida.']);
         exit;
@@ -245,6 +254,11 @@ if ($isVendedor && !$isComprador) {
 if ($isComprador) {
     // cancelar: buyer cancels their pending proposal
     if ($acao === 'cancelar') {
+        if (!$isAdmin && !$usuarioEhAutorUltimaOferta) {
+            echo json_encode(['success' => false, 'message' => 'Apenas quem enviou a última proposta pode cancelá-la.']);
+            exit;
+        }
+
         if (!in_array($proposta['status'], ['aguardando_vendedor', 'aguardando_comprador', 'aguardando', 'pendente'], true)) {
             echo json_encode(['success' => false, 'message' => 'Proposta não pode ser cancelada neste momento.']);
             exit;
@@ -282,6 +296,11 @@ if ($isComprador) {
     );
     if (!$contraPendenteComprador && !$aguardandoVendedorRecebidoPeloComprador) {
         echo json_encode(['success' => false, 'message' => 'Não há contraproposta pendente para responder.']);
+        exit;
+    }
+
+    if (!$usuarioEhReceptorUltimaOferta) {
+        echo json_encode(['success' => false, 'message' => 'Essa proposta não está aguardando sua resposta.']);
         exit;
     }
 

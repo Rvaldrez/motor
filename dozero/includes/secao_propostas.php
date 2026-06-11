@@ -352,20 +352,44 @@ unset($p);
             $isVendedorRole  = ($tipo === 'vendedor' || $tipo === 'administrador' || ($tipo === 'investidor' && $meuPapel === 'vendedor'));
             $isCompradorRole = ($tipo === 'investidor' && $meuPapel === 'comprador');
             $effUsuarioId = (int)($p['effective_usuario_id'] ?? 0);
+            $usuarioRecebeuUltimaOferta = ($tipo === 'administrador') || $effUsuarioId === 0 || $effUsuarioId !== $userId;
+            $usuarioEnviouUltimaOferta  = $effUsuarioId !== 0 && $effUsuarioId === $userId;
+            $vendedorPodeResponder =
+                $isVendedorRole
+                && $usuarioRecebeuUltimaOferta
+                && in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente', 'recebida', 'contraproposta_comprador', 'resposta_comprador'], true);
             $compradorPodeResponderContra =
-                in_array($effStatus, ['contraoferta', 'contraproposta', 'aguardando_comprador', 'recebida'], true)
-                || (
-                    $effStatus === 'aguardando_vendedor'
-                    && (int)($p['respostas'] ?? 0) > 0
-                    && $effUsuarioId !== 0
-                    && $effUsuarioId !== $userId
+                $isCompradorRole
+                && $usuarioRecebeuUltimaOferta
+                && (
+                    in_array($effStatus, ['contraoferta', 'contraproposta', 'aguardando_comprador', 'recebida'], true)
+                    || (
+                        $effStatus === 'aguardando_vendedor'
+                        && (int)($p['respostas'] ?? 0) > 0
+                        && $effUsuarioId !== 0
+                        && $effUsuarioId !== $userId
+                    )
                 );
             $compradorPodeCancelar =
+                $isCompradorRole
+                &&
                 in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente'], true)
+                && ($effUsuarioId === 0 || $usuarioEnviouUltimaOferta)
                 && !$compradorPodeResponderContra;
+            $vendedorAguardandoResposta =
+                $isVendedorRole
+                && !$vendedorPodeResponder
+                && $usuarioEnviouUltimaOferta
+                && in_array($effStatus, ['contraoferta', 'contraproposta', 'negociando', 'aguardando_comprador', 'aguardando_vendedor'], true);
+            $compradorAguardandoResposta =
+                $isCompradorRole
+                && !$compradorPodeResponderContra
+                && !$compradorPodeCancelar
+                && $usuarioEnviouUltimaOferta
+                && in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente', 'negociando', 'contraproposta_comprador', 'resposta_comprador'], true);
             // For vendor: when they've sent a counter-proposal and are waiting for the buyer,
             // show "Aguardando" badge instead of "Contraproposta" to communicate their perspective.
-            $badgeStatus = ($isVendedorRole && in_array($effStatus, ['contraoferta', 'contraproposta'], true))
+            $badgeStatus = ($isVendedorRole && $usuarioEnviouUltimaOferta && in_array($effStatus, ['contraoferta', 'contraproposta', 'aguardando_vendedor'], true))
                 ? 'aguardando_comprador'
                 : $effStatus;
         ?>
@@ -450,7 +474,7 @@ unset($p);
             <!-- Card Footer: action buttons -->
             <div class="pc-footer">
                 <?php if ($isVendedorRole): ?>
-                    <?php if (in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente', 'recebida', 'contraproposta_comprador', 'resposta_comprador'], true)): ?>
+                    <?php if ($vendedorPodeResponder): ?>
                     <button class="pc-btn pc-btn-success" onclick="responderProposta(<?= $effId ?>, 'aceitar')">
                         <i class="fa-solid fa-check"></i> Aceitar
                     </button>
@@ -460,7 +484,7 @@ unset($p);
                     <button class="pc-btn pc-btn-contra"  onclick="abrirModalContraproposta(<?= $effId ?>, 'vendedor')">
                         <i class="fa-solid fa-arrows-rotate"></i> Contraproposta
                     </button>
-                    <?php elseif (in_array($effStatus, ['contraoferta','contraproposta','negociando','aguardando_comprador'], true)): ?>
+                    <?php elseif ($vendedorAguardandoResposta): ?>
                     <span class="pc-waiting-msg"><i class="fa-solid fa-hourglass-half"></i> Aguardando resposta do comprador</span>
                     <?php elseif ($effStatus === 'aceita'): ?>
                     <div class="pc-accepted-info">
@@ -522,7 +546,7 @@ unset($p);
                     <a href="?secao=oferta" class="pc-btn pc-btn-primary">
                         <i class="fa-solid fa-plus"></i> Nova Proposta
                     </a>
-                    <?php elseif ($effStatus === 'negociando' || $effStatus === 'contraproposta_comprador' || $effStatus === 'resposta_comprador'): ?>
+                    <?php elseif ($compradorAguardandoResposta): ?>
                     <span class="pc-waiting-msg"><i class="fa-solid fa-hourglass-half"></i> Aguardando resposta do vendedor</span>
                     <?php endif; ?>
                 <?php endif; ?>
