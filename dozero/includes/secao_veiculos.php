@@ -38,8 +38,8 @@ if ($tipo === 'administrador') {
                  FROM veiculos v
                  $fotoJoin
                  WHERE v.usuario_id = ?";
-    $params = [$userId, $userId];
-    $types  = 'ii';
+    $params = [$user['nome'], $userId];
+    $types  = 'si';
 }
 
 $conditions = '';

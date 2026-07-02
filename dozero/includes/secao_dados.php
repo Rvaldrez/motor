@@ -7,7 +7,7 @@ $userId = (int) $user['id'];
 
 // Fetch full user data
 $stmt = $conn->prepare("
-    SELECT id, nome, email, celular, cpf, cep, endereco, numero, complemento,
+    SELECT id, nome, email, celular, cpf, cep, endereco, numero, complemento, bairro,
            cidade, estado, tipo, status_confirmacao, status_cadastro, data_cadastro
     FROM usuarios WHERE id = ?
 ");
@@ -132,6 +132,12 @@ $tc = $tipoBadgeColors[$userData['tipo'] ?? ''] ?? ['#f3f4f6','#6b7280'];
                     <input type="text" name="complemento" class="form-control"
                            value="<?= htmlspecialchars($userData['complemento'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                            placeholder="Apto, bloco…">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bairro</label>
+                    <input type="text" name="bairro" class="form-control"
+                           value="<?= htmlspecialchars($userData['bairro'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                           placeholder="Seu bairro">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Cidade</label>

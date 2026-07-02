@@ -410,6 +410,14 @@ if ($isComprador) {
         $stmt->execute();
         $stmt->close();
 
+        // Update root proposal status so vendor badge/counts reflect the pending state
+        if ((int)$proposta_id !== $root_id) {
+            $stmt = $conn->prepare("UPDATE propostas SET status = 'aguardando_vendedor' WHERE id = ?");
+            $stmt->bind_param('i', $root_id);
+            $stmt->execute();
+            $stmt->close();
+        }
+
         // Insert new proposal from buyer back to seller
         $stmt = $conn->prepare(
             "INSERT INTO propostas (veiculo_id, usuario_id, valor, data_proposta, status, proposta_origem_id, mensagem)
