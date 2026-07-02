@@ -182,8 +182,7 @@ function confirmarNegociacao(id) {
 
   if (!campo || !btnEnviar) return mostrarPopup("❌ Erro interno.");
 
-  let valor = campo.value.replace(/\s/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.');
-  const valorFloat = parseFloat(valor);
+  const valorFloat = parseValorMonetario(campo.value);
 
   if (!valorFloat || valorFloat <= 0) {
     mostrarPopup("⚠️ Informe um valor válido.");
@@ -219,14 +218,44 @@ function confirmarNegociacao(id) {
     });
 }
 
+function parseValorMonetario(valorBruto) {
+  if (typeof valorBruto === "number") return valorBruto;
+
+  let valor = String(valorBruto || "")
+    .replace(/\s/g, "")
+    .replace("R$", "")
+    .replace(/[^\d,.-]/g, "");
+
+  if (!valor) return 0;
+
+  if (valor.includes(",")) {
+    valor = valor.replace(/\./g, "").replace(",", ".");
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(valor)) {
+    valor = valor.replace(/\./g, "");
+  }
+
+  const numero = parseFloat(valor);
+  return Number.isFinite(numero) ? numero : 0;
+}
+
 // ✅ Máscara monetária
 document.addEventListener("input", function (e) {
-  if (e.target.classList.contains("mascara-valor")) {
-    let valor = e.target.value.replace(/\D/g, "");
-    valor = (valor / 100).toFixed(2) + "";
-    valor = valor.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    e.target.value = "R$ " + valor;
+  if (!e.target.classList.contains("mascara-valor")) return;
+  const el = e.target;
+  const inputType = e.inputType || "";
+  const inputData = e.data;
+  let prevInt = el.dataset.intVal || "";
+  if (inputType.startsWith("delete")) {
+    prevInt = prevInt.slice(0, -1);
+  } else if (inputData !== null && inputData !== undefined) {
+    if (/^\d+$/.test(inputData)) prevInt += inputData;
+  } else {
+    prevInt = el.value.replace(/\D/g, "").slice(0, 15);
   }
+  if (!prevInt || prevInt === "0") { el.value = ""; el.dataset.intVal = ""; return; }
+  prevInt = String(parseInt(prevInt, 10));
+  el.dataset.intVal = prevInt;
+  el.value = "R$ " + prevInt.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00";
 });
 
 // ✅ Copiar dados do comprador
@@ -294,5 +323,3 @@ function mostrarPopupConfirmacao(mensagem, onConfirmar) {
     popup.remove();
   };
 }
-
-

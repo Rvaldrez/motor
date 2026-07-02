@@ -4,6 +4,29 @@ require_once "conexao_bd.php";
 require_once "helpers/email_proposta.php";
 header("Content-Type: application/json");
 
+function normalizarValorMonetario($valor): float {
+    if (is_numeric($valor)) {
+        return (float) $valor;
+    }
+
+    $valor = trim((string) $valor);
+    $valor = str_replace(['R$', ' '], '', $valor);
+    $valor = preg_replace('/[^\d,.\-]/', '', $valor);
+
+    if ($valor === '') {
+        return 0.0;
+    }
+
+    if (strpos($valor, ',') !== false) {
+        $valor = str_replace('.', '', $valor);
+        $valor = str_replace(',', '.', $valor);
+    } elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $valor)) {
+        $valor = str_replace('.', '', $valor);
+    }
+
+    return (float) $valor;
+}
+
 // ✅ Verifica autenticação e método
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['usuario_id'], $_SESSION['usuario_tipo'])) {
     echo json_encode(["success" => false, "message" => "Acesso negado."]);
@@ -12,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['usuario_id'], $_S
 
 $usuario_id   = $_SESSION['usuario_id'];
 $proposta_id  = intval($_POST['proposta_id'] ?? 0);
-$novo_valor   = floatval($_POST['novo_valor'] ?? 0);
+$novo_valor   = normalizarValorMonetario($_POST['novo_valor'] ?? 0);
 
 if ($proposta_id <= 0 || $novo_valor <= 0) {
     echo json_encode(["success" => false, "message" => "Dados inválidos."]);

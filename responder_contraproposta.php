@@ -4,6 +4,29 @@ require_once "conexao_bd.php";
 require_once "helpers/email_proposta.php";
 header("Content-Type: application/json");
 
+function normalizarValorMonetario($valor): float {
+  if (is_numeric($valor)) {
+    return (float) $valor;
+  }
+
+  $valor = trim((string) $valor);
+  $valor = str_replace(['R$', ' '], '', $valor);
+  $valor = preg_replace('/[^\d,.\-]/', '', $valor);
+
+  if ($valor === '') {
+    return 0.0;
+  }
+
+  if (strpos($valor, ',') !== false) {
+    $valor = str_replace('.', '', $valor);
+    $valor = str_replace(',', '.', $valor);
+  } elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $valor)) {
+    $valor = str_replace('.', '', $valor);
+  }
+
+  return (float) $valor;
+}
+
 if (!isset($_SESSION['usuario_id'])) {
   echo json_encode(["success" => false, "message" => "Acesso negado."]);
   exit;
@@ -64,7 +87,7 @@ if (
 
 // 🟡 Se for negociação, cria nova proposta e move a atual para histórico
 if ($acao === 'negociar') {
-  $valor_limpo = floatval(str_replace(',', '.', str_replace(['R$', '.', ' '], '', $valor)));
+  $valor_limpo = normalizarValorMonetario($valor);
 
   if ($valor_limpo <= 0) {
     echo json_encode(["success" => false, "message" => "Informe um valor válido."]);
