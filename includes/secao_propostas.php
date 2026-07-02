@@ -388,7 +388,7 @@ unset($p);
                 && !$compradorPodeResponderContra
                 && !$compradorPodeCancelar
                 && $usuarioEnviouUltimaOferta
-                && in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente', 'negociando', 'contraproposta_comprador', 'resposta_comprador'], true);
+                && in_array($effStatus, ['aguardando_vendedor', 'aguardando', 'pendente', 'negociando', 'contraoferta', 'contraproposta', 'contraproposta_comprador', 'resposta_comprador'], true);
             // For vendor: when they've sent a counter-proposal and are waiting for the buyer,
             // show "Aguardando" badge instead of "Contraproposta" to communicate their perspective.
             $badgeStatus = ($isVendedorRole && $usuarioEnviouUltimaOferta && in_array($effStatus, ['contraoferta', 'contraproposta', 'aguardando_vendedor'], true))

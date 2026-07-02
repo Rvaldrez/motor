@@ -223,7 +223,11 @@ if ($isVendedor && !$isComprador) {
              VALUES (?, ?, ?, NOW(), 'contraoferta', ?, ?)"
         );
         $stmt->bind_param('iidis', $proposta['veiculo_id'], $usuario_id, $novo_valor, $root_id, $mensagem);
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            $stmt->close();
+            echo json_encode(['success' => false, 'message' => 'Erro ao registrar contraproposta.']);
+            exit;
+        }
         $stmt->close();
 
         if ($buyer) {
@@ -424,7 +428,11 @@ if ($isComprador) {
              VALUES (?, ?, ?, NOW(), 'aguardando_vendedor', ?, ?)"
         );
         $stmt->bind_param('iidis', $proposta['veiculo_id'], $root_comprador_id, $novo_valor, $root_id, $mensagem);
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            $stmt->close();
+            echo json_encode(['success' => false, 'message' => 'Erro ao registrar contraproposta.']);
+            exit;
+        }
         $stmt->close();
 
         $bodyNewContra = "<p>Olá, <strong>" . htmlspecialchars($proposta['vendedor_nome'], ENT_QUOTES, 'UTF-8') . "</strong>!</p>

@@ -34,6 +34,7 @@ if ($tipo === 'vendedor') {
         SELECT COUNT(*) FROM propostas p
         INNER JOIN veiculos v ON v.id = p.veiculo_id
         WHERE v.usuario_id = ? AND p.status IN ('aguardando', 'aguardando_vendedor', 'recebida')
+          AND (p.proposta_origem_id IS NULL OR p.proposta_origem_id = 0 OR p.proposta_origem_id = p.id)
     ");
     if ($stmt) {
         $stmt->bind_param('i', $userId);
